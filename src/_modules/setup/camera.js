@@ -3,10 +3,13 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 export let camera, controls;
 
-export function setup(renderer) {
+export function setup(renderer, composer) {
 
     camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 0.1, 1000 );
-    camera.position.set(0,1,5);
+    camera.position.set(30, 30, 50);
+    // camera = new THREE.OrthographicCamera( - aspectRatio, aspectRatio, 1, - 1, 0.1, 10 );
+    // camera.position.y = 2 * Math.tan( Math.PI / 6 );
+    // camera.position.z = 2;
 
     controls = new OrbitControls(camera, renderer.domElement);
     controls.target = new THREE.Vector3(0, 1, 0);
@@ -21,7 +24,8 @@ export function setup(renderer) {
     window.addEventListener('resize', () => {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setSize( window.innerWidth, window.innerHeight );
+        composer.setSize( window.innerWidth, window.innerHeight );
     })
 
 }
