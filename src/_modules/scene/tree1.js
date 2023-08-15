@@ -5,7 +5,13 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 let tree, leavesMat, matrix, dummy;
 
-export function setup(scene) {
+let params = {
+    uColorA:  new THREE.Color(0xb45252),
+    uColorB:  new THREE.Color(0xd3a068),
+    uColorC:  new THREE.Color(0xede19e),
+};
+
+export function setup(scene, gui) {
     dummy = new THREE.Object3D();
     matrix = new THREE.Matrix4();
     const pointer = new THREE.Vector2(); 
@@ -23,9 +29,9 @@ export function setup(scene) {
     uniforms: {
         ...THREE.UniformsLib.lights,
         uTime: {value: 0.},
-        uColorA: {value: new THREE.Color(0xb45252)},
-        uColorB: {value: new THREE.Color(0xd3a068)},
-        uColorC: {value: new THREE.Color(0xede19e)},
+        uColorA: {value: params.uColorA},
+        uColorB: {value: params.uColorB},
+        uColorC: {value: params.uColorC},
         uBoxMin: {value: new THREE.Vector3(0,0,0)},
         uBoxSize: {value: new THREE.Vector3(10,10,10)},
         uRaycast: {value: new THREE.Vector3(0,0,0)},
@@ -82,12 +88,33 @@ export function setup(scene) {
     noiseMap.wrapS = THREE.RepeatWrapping;
     noiseMap.wrapT = THREE.RepeatWrapping;
 
+
+    setupGUI(gui);
+
+}
+
+function setupGUI(gui) {
+    //add gui
+
+    const treeFolder = gui.addFolder('Tree');
+
+    treeFolder.addColor( params, 'uColorA' ).onChange( function ( value ) {
+        leavesMat.uniforms[ 'uColorA' ].value.set( value );
+    } );
+    treeFolder.addColor( params, 'uColorB' ).onChange( function ( value ) {
+        leavesMat.uniforms[ 'uColorB' ].value.set( value );
+    } );
+    treeFolder.addColor( params, 'uColorC' ).onChange( function ( value ) {
+        leavesMat.uniforms[ 'uColorC' ].value.set( value );
+    } );
+
+    treeFolder.close();
 }
 
 
 export function update(delta) {
 
-    leavesMat.uniforms.uTime.value += delta; 
+    leavesMat.uniforms.uTime.value += delta/10; 
 
     if (tree.deadID){
         tree.deadID = tree.deadID.map(i => {
@@ -175,6 +202,7 @@ const leavesFS = /*glsl*/`
         float gradMap = (getPosColors() + getDiffuse()) * vCloseToGround / 2. ;
         vec4 c = vec4(mix3(uColorA, uColorB, uColorC, gradMap), 1.0);
         gl_FragColor = vec4(pow(c.xyz,vec3(0.454545)), c.w);
-				//gl_FragColor = vec4(c.xyz, c.w);
+		//gl_FragColor = vec4(c.xyz, c.w);
+        //odd change here for color space
     }
 `

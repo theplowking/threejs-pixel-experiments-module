@@ -3,6 +3,8 @@
 import * as THREE from 'three';
 import { Reflector } from 'three/examples/jsm/objects/Reflector.js'
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import lights from './_modules/setup/lights.js';
 import * as camera from './_modules/setup/camera.js';
 import * as rendererMod from './_modules/setup/renderer.js';
@@ -22,7 +24,7 @@ import * as tree1 from './_modules/scene/tree1.js';
 
 // SCENE
 const scene = new THREE.Scene();
-scene.background = new THREE.Color( 0x111111 );
+scene.background = new THREE.Color( 0xffffff );
 const renderer = new THREE.WebGLRenderer({antialias:true});
 let composer = new EffectComposer( renderer );
 const threejs_canvas = document.getElementById("three");
@@ -31,7 +33,9 @@ let clock = new THREE.Clock();
 
 //RENDERER
 rendererMod.setup(renderer, threejs_canvas);
-
+//set color space to fix tree, not ideal
+//renderer.gammaFactor = 5;
+renderer.outputColorSpace = THREE.LinearSRGBColorSpace
 //CAMERA
 camera.setup(renderer, composer);
 
@@ -39,18 +43,21 @@ camera.setup(renderer, composer);
 pixelPass.setup(scene, camera.camera, composer, 1);
 palettePass(composer, gui, false);
 
+const outputPass = new OutputPass();
+composer.addPass( outputPass );
+
 //LIGHTS
-//lights(scene); 
+lights(scene); 
 
 //BACKGROUND
-ground(scene);
-skybox(scene);
-water2(scene, gui);
+ ground(scene);
+ skybox(scene);
+ water2(scene, gui);
 
 //OBJECTS
 //cube.setup(scene);
 //fire.setup(scene, camera.camera);
-tree1.setup(scene);
+tree1.setup(scene, gui);
 
 //gui
 setupGUI(gui);
@@ -68,9 +75,10 @@ function animate() {
     //fire.update(delta);
     tree1.update(delta);
     
-    pixelPass.update(renderer, camera.camera);
+    // pixelPass.update(renderer, camera.camera);
 
     composer.render();
+    //renderer.render(scene, camera.camera); 
 }
 
 animate();
