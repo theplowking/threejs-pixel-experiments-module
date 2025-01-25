@@ -38,6 +38,7 @@ const config = {
         },
         { from: 'src/_icons/', to:'_icons' },
         { from: 'src/textures/', to:'textures' },
+        { from: 'src/models/', to:'models' },
       ],
     })
   ],

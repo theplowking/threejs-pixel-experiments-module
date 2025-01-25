@@ -19,9 +19,10 @@
     "webpack-dev-server": "^4.15.1"
   },
   "dependencies": {
+    "@pixiv/three-vrm": "^2.0.7",
     "cannon-es": "^0.20.0",
     "cannon-es-debugger": "^1.0.0",
-    "three": "^0.155",
+    "three": "^0.155.0",
     "three-particle-fire": "^0.1.0"
   }
 }

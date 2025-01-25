@@ -5,7 +5,7 @@ import { Reflector } from 'three/examples/jsm/objects/Reflector.js'
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import lights from './_modules/setup/lights.js';
+import * as lights from './_modules/setup/lights.js';
 import * as camera from './_modules/setup/camera.js';
 import * as rendererMod from './_modules/setup/renderer.js';
 
@@ -20,7 +20,12 @@ import skybox from './_modules/scene/skybox.js';
 import water2 from './_modules/scene/water2.js';
 import * as cube from './_modules/scene/cube.js';
 import * as fire from './_modules/scene/fire.js';
+import * as rain from './_modules/scene/rain.js';
 import * as tree1 from './_modules/scene/tree1.js';
+import tree2 from './_modules/scene/tree2.js';
+import modelGLTF from './_modules/scene/modelGLTF.js';
+
+import * as character from './_modules/scene/character.js';
 
 // SCENE
 const scene = new THREE.Scene();
@@ -47,17 +52,21 @@ const outputPass = new OutputPass();
 composer.addPass( outputPass );
 
 //LIGHTS
-lights(scene); 
+lights.setup(scene, gui); 
 
 //BACKGROUND
- ground(scene);
- skybox(scene);
- water2(scene, gui);
+ //ground(scene);
+ //skybox(scene);
+ modelGLTF(scene);
+// water2(scene, gui);
 
 //OBJECTS
 //cube.setup(scene);
-//fire.setup(scene, camera.camera);
-tree1.setup(scene, gui);
+fire.setup(scene, camera.camera);
+rain.setup(scene, camera.camera);
+character.setup(scene, camera.camera);
+//tree1.setup(scene, gui);
+
 
 //gui
 setupGUI(gui);
@@ -73,7 +82,10 @@ function animate() {
     camera.update()    
     //cube.update(delta); 
     //fire.update(delta);
-    tree1.update(delta);
+    rain.update(delta);
+    //lights.update(delta);
+    character.update(delta);
+    //tree1.update(delta);
     
     // pixelPass.update(renderer, camera.camera);
 
