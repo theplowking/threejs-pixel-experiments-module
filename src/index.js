@@ -58,13 +58,13 @@ lights.setup(scene, gui);
  //ground(scene);
  //skybox(scene);
  modelGLTF(scene);
-// water2(scene, gui);
+water2(scene, gui, 3.2, 0.25);
 
 //OBJECTS
 //cube.setup(scene);
-fire.setup(scene, camera.camera);
-rain.setup(scene, camera.camera);
-character.setup(scene, camera.camera);
+// fire.setup(scene, camera.camera);
+// rain.setup(scene, camera.camera);
+//character.setup(scene, camera.camera);
 //tree1.setup(scene, gui);
 
 
@@ -81,10 +81,10 @@ function animate() {
 
     camera.update()    
     //cube.update(delta); 
-    fire.update(delta);
-    rain.update(delta);
+    // fire.update(delta);
+    // rain.update(delta);
     //lights.update(delta);
-    character.update(delta);
+    //character.update(delta);
     //tree1.update(delta);
     
     // pixelPass.update(renderer, camera.camera);

@@ -12,9 +12,9 @@ let params = {
     flowY: 1
 };
 
-export default function water2(scene, gui) {
+export default function water2(scene, gui, scale, pos) {
 
-    const waterGeometry = new THREE.PlaneGeometry( 20, 20 );
+    const waterGeometry = new THREE.PlaneGeometry( scale, scale );
 
     water = new Water( waterGeometry, {
         color: params.color,
@@ -24,7 +24,8 @@ export default function water2(scene, gui) {
         textureHeight: 1024
     } );
 
-    water.position.y = 1;
+    //water.position.y = 1;
+    water.position.set(0, pos,0);
     water.rotation.x = Math.PI * - 0.5;
     scene.add( water );
 

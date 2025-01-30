@@ -2,21 +2,21 @@ import * as THREE from 'three';
 
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
-export default function modelGTLF(scene) {
+export default function modelGTLF(scene, forceFlat = false) {
 
     // Load a glTF resource
     var loader = new GLTFLoader();
     loader.load(
         // resource URL
-        //'models/an_afternoon_in_a_persian_garden.glb',
-        'models/ballycarbery_castle_ruin_scale.glb',
+        'models/an_afternoon_in_a_persian_garden.glb',
+        //'models/ballycarbery_castle_ruin_scale.glb',
         // called when the resource is loaded 
         function ( gltf ) {
 
             var model = gltf.scene;
 
             // Scale the model
-            //model.scale.set(0.01, 0.01, 0.01);
+            model.scale.set(0.01, 0.01, 0.01);
             //model.scale.set(4,4,2);
             
             //model.rotation.y = Math.PI ; // 90 degrees in radians
@@ -31,7 +31,9 @@ export default function modelGTLF(scene) {
             
             //model.position.set(-52, 115, -1157.630);
 
-            model.traverse(function (child) {
+            if(forceFlat)
+            {
+                model.traverse(function (child) {
                 //console.log(child.material);
                 //if ( child.material ) child.material.metalness = 0;
                 if (child.isMesh) {
@@ -54,6 +56,8 @@ export default function modelGTLF(scene) {
                     child.receiveShadow = true; // Enable shadow receiving
                 }
             });
+            }
+            
 
             // Add the scaled model to the scene
             scene.add(model);
