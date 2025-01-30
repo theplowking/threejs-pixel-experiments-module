@@ -81,7 +81,7 @@ function animate() {
 
     camera.update()    
     //cube.update(delta); 
-    //fire.update(delta);
+    fire.update(delta);
     rain.update(delta);
     //lights.update(delta);
     character.update(delta);

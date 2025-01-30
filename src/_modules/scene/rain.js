@@ -130,6 +130,6 @@ export function setup(scene, camera) {
 
 export function update(delta) {
 
-    globalUniforms.time.value = performance.now() * 0.001;
+    globalUniforms.time.value = performance.now() * 0.001 * 0.5;
 
 }

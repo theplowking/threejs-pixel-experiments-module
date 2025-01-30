@@ -11,9 +11,9 @@ let particleFireMesh0, light;
 
 export function setup(scene, camera) {
 
-    var fireRadius = 3;
-    var fireHeight = 3*6;
-    var particleCount = 5000;
+    var fireRadius = 2;
+    var fireHeight = 1.5*6;
+    var particleCount = 2000;
 
     // var fireRadius = 0.5;
     // var fireHeight = 3;
