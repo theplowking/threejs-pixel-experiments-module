@@ -21,7 +21,8 @@ export default function water2(scene, gui, scale, pos) {
         scale: params.scale,
         flowDirection: new THREE.Vector2( params.flowX, params.flowY ),
         textureWidth: 1024,
-        textureHeight: 1024
+        textureHeight: 1024,
+        flowSpeed: 0.01
     } );
 
     //water.position.y = 1;
