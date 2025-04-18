@@ -18,7 +18,7 @@ export default function terrain(scene) {
         wireframe: false,
         displacementMap: disMap, // affects position of mesh vertices, white = highest, black = lowest
         displacementScale: 100, // how much disMap affects mesh (def = 1)
-        flatShading: true,
+        //flatShading: true,
         receiveShadow: true
     });
 
@@ -44,7 +44,7 @@ export default function terrain(scene) {
     
     
     const textureLoader = new THREE.TextureLoader();
-        textureLoader.load( 'textures/map.png', function ( map ) {
+        textureLoader.load( 'textures/map2.jpg', function ( map ) {
     
             //map.wrapS = THREE.RepeatWrapping;
             //map.wrapT = THREE.RepeatWrapping;

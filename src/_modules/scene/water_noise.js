@@ -35,7 +35,8 @@ export function setup(scene, gui, scale, pos) {
               flowDirection: new THREE.Vector2( params.flowX, params.flowY ),
               textureWidth: 1024,
               textureHeight: 1024,
-              flowSpeed: 0.01
+              flowSpeed: 0.01,
+              //reflectivity: 0.05
           } );
       
       // Create a more visible material for the ocean

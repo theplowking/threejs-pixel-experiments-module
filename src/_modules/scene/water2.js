@@ -3,18 +3,20 @@ import * as THREE from 'three';
 
 import { Water } from 'three/examples/jsm/objects/Water2.js';
 
+import { WaterShader } from '../shaders/water/water_combo.js';
+
 let water;
 
 let params = {
     color: '#ffffff',
-    scale: 4,
+    scale: 10,
     flowX: 1,
     flowY: 1
 };
 
-export default function water2(scene, gui, scale, pos) {
+export function setup(scene, gui, scale, pos) {
 
-    const waterGeometry = new THREE.PlaneGeometry( scale, scale );
+    const waterGeometry = new THREE.PlaneGeometry( scale, scale, 512, 512 );
 
     water = new Water( waterGeometry, {
         color: params.color,
@@ -22,9 +24,13 @@ export default function water2(scene, gui, scale, pos) {
         flowDirection: new THREE.Vector2( params.flowX, params.flowY ),
         textureWidth: 1024,
         textureHeight: 1024,
-        flowSpeed: 0.01
+        flowSpeed: 0.01,
+        reflectivity: 0.02,
+        shader: WaterShader,
     } );
 
+    //water.material.flatShading = true;
+    //water.material.wireframe = true;
     //water.position.y = 1;
     water.position.set(0, pos,0);
     water.rotation.x = Math.PI * - 0.5;
@@ -61,4 +67,7 @@ export default function water2(scene, gui, scale, pos) {
 
 }
 
+export function update(delta) {
+    water.material.uniforms[ 'uTime' ].value += delta;
+}
 

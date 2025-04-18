@@ -17,9 +17,10 @@ import { GUI } from 'three/examples/jsm/libs/lil-gui.module.min.js';
 
 import ground from './_modules/scene/ground.js';
 import skybox from './_modules/scene/skybox.js';
-import water2 from './_modules/scene/water2.js';
+import * as water2 from './_modules/scene/water2.js';
 
 import * as water_noise from './_modules/scene/water_noise.js';
+import * as water_noise_shader from './_modules/scene/water_noise_shader.js';
 import * as cube from './_modules/scene/cube.js';
 import * as fire from './_modules/scene/fire.js';
 import * as rain from './_modules/scene/rain.js';
@@ -59,10 +60,10 @@ lights.setup(scene, gui);
 
 //BACKGROUND
  //ground(scene);
- //skybox(scene);
+ skybox(scene);
  //modelGLTF(scene);
-//water2(scene, gui, 1000, 5);
-water_noise.setup(scene, gui, 1000, 5);
+water2.setup(scene, gui, 1000, 5);
+//water_noise_shader.setup(scene, gui, 1000, 5);
 terrain(scene);
 
 //OBJECTS
@@ -91,7 +92,8 @@ function animate() {
     //lights.update(delta);
     //character.update(delta);
     //tree1.update(delta);
-    water_noise.update(delta);
+    //water_noise_shader.update(delta);
+    water2.update(delta);
     
     // pixelPass.update(renderer, camera.camera);
 
