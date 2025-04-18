@@ -43,11 +43,11 @@ export function setup(renderer, composer) {
     // controls.minDistance = 4;
     // controls.maxDistance = 52;
     controls.enablePan = true;
-    controls.listenToKeyEvents( window )
+    //controls.listenToKeyEvents( window )
 
-    controls.target.x=1.2551414760094688;
-    controls.target.y=7.36321056062296;
-    controls.target.z=3.0276693459082167;
+    // controls.target.x=1.2551414760094688;
+    // controls.target.y=7.36321056062296;
+    // controls.target.z=3.0276693459082167;
 
     window.addEventListener('resize', () => {
         camera.aspect = window.innerWidth / window.innerHeight;

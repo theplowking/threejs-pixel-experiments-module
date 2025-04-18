@@ -1,6 +1,9 @@
 
 
 import * as THREE from 'three';
+
+import * as CANNON from 'cannon-es';
+
 import { Reflector } from 'three/examples/jsm/objects/Reflector.js'
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 
@@ -18,6 +21,7 @@ import { GUI } from 'three/examples/jsm/libs/lil-gui.module.min.js';
 import ground from './_modules/scene/ground.js';
 import skybox from './_modules/scene/skybox.js';
 import * as water2 from './_modules/scene/water2.js';
+import * as boat from './_modules/scene/boat.js';
 
 import * as water_noise from './_modules/scene/water_noise.js';
 import * as water_noise_shader from './_modules/scene/water_noise_shader.js';
@@ -33,6 +37,9 @@ import * as character from './_modules/scene/character.js';
 
 // SCENE
 const scene = new THREE.Scene();
+const world = new CANNON.World();
+world.gravity.set(0, -9.82, 0);
+
 scene.background = new THREE.Color( 0xffffff );
 const renderer = new THREE.WebGLRenderer({antialias:true});
 let composer = new EffectComposer( renderer );
@@ -72,6 +79,7 @@ terrain(scene);
 // rain.setup(scene, camera.camera);
 //character.setup(scene, camera.camera);
 //tree1.setup(scene, gui);
+boat.setup(scene, water2, world, new THREE.Vector3(0, 2, 0));
 
 
 //gui
@@ -85,6 +93,8 @@ function animate() {
 
     const delta = clock.getDelta();
 
+    world.step(1/60, delta, 3);
+
     camera.update()    
     //cube.update(delta); 
     // fire.update(delta);
@@ -94,7 +104,7 @@ function animate() {
     //tree1.update(delta);
     //water_noise_shader.update(delta);
     water2.update(delta);
-    
+    boat.update(delta);
     // pixelPass.update(renderer, camera.camera);
 
     composer.render();
