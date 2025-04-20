@@ -6,6 +6,9 @@ import * as water from './water2.js';
 let boat = null;
 let world = null;
 
+// Debug spheres for water height at corners
+let debugSpheres = [];
+
 // Controls state (singleton for all boats)
 const keys = {
     ArrowUp: false,
@@ -59,6 +62,17 @@ export function setup(scene, water, cannonWorld, position = new THREE.Vector3(0,
     // Add to scene and world
     scene.add(mesh);
     world.addBody(body);
+
+    // Create debug spheres for water surface at corners
+    if (debugSpheres.length === 0) {
+        const sphereGeo = new THREE.SphereGeometry(0.15, 16, 16);
+        const sphereMat = new THREE.MeshBasicMaterial({ color: 0x3388ff, transparent: true, opacity: 0.6 });
+        for (let i = 0; i < 4; i++) {
+            const s = new THREE.Mesh(sphereGeo, sphereMat.clone());
+            scene.add(s);
+            debugSpheres.push(s);
+        }
+    }
 }
 
 /**
@@ -75,11 +89,16 @@ export function update(delta) {
         new CANNON.Vec3(-1, -0.5, 2),
         new CANNON.Vec3(1, -0.5, 2)
     ];
-    corners.forEach(corner => {
+    corners.forEach((corner, i) => {
         const worldPoint = body.position.vadd(body.quaternion.vmult(corner));
         let waterHeight = 0;
         waterHeight = water.getWaterHeightAt(worldPoint.x, worldPoint.z);
         
+        // Update debug sphere position
+        if (debugSpheres[i]) {
+            debugSpheres[i].position.set(worldPoint.x, waterHeight, worldPoint.z);
+        }
+
         const depth = waterHeight - worldPoint.y;
         if (depth > 0) {
             const buoyancyForce = depth * 40;

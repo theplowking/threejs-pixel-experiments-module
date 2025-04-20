@@ -16,7 +16,7 @@ let params = {
 
 export function setup(scene, gui, scale, pos) {
 
-    const waterGeometry = new THREE.PlaneGeometry( scale, scale, 512, 512 );
+    const waterGeometry = new THREE.PlaneGeometry( scale, scale, 1024, 1024 );
 
     water = new Water( waterGeometry, {
         color: params.color,
@@ -90,13 +90,14 @@ export function getWaterHeightAt(x, z) {
     let currentFrequency = frequency;
 
     // Simplex noise implementation
-    const simplex = new SimplexNoise();
+    //const simplex = new SimplexNoise();
 
     for (let i = 0; i < iterations; i++) {
-      const noiseValue = simplex.noise2D(
-        localX * currentFrequency + time * speed,
-        localZ * currentFrequency + time * speed
-      );
+    //   const noiseValue = simplex.noise2D(
+    //     localX * currentFrequency + time * speed,
+    //     localZ * currentFrequency + time * speed
+    //   );
+      const noiseValue = snoise([localX * currentFrequency + time * speed, localZ * currentFrequency + time * speed]);
       elevation += currentAmplitude * noiseValue;
       currentAmplitude *= persistence;
       currentFrequency *= lacunarity;
@@ -105,6 +106,94 @@ export function getWaterHeightAt(x, z) {
     elevation *= amplitude;
     return elevation + water.position.y;
   }
+
+
+  function snoise(v) {
+    const C = [0.211324865405187, 0.366025403784439, -0.577350269189626, 0.024390243902439];
+
+    // Helper function to emulate GLSL mod
+    function mod289(x) {
+        return x - Math.floor(x / 289.0) * 289.0;
+    }
+
+    // Helper function to emulate GLSL permute
+    function permute(x) {
+        return mod289(((x * 34.0) + 1.0) * x);
+    }
+
+    // Helper function to emulate GLSL fract
+    function fract(x) {
+        return x - Math.floor(x);
+    }
+
+    // Helper function for dot product of two vec2
+    function dot2(a, b) {
+        return a[0] * b[0] + a[1] * b[1];
+    }
+
+    // Compute grid cell coordinates
+    let i = [
+        Math.floor(v[0] + dot2(v, [C[1], C[1]])),
+        Math.floor(v[1] + dot2(v, [C[1], C[1]]))
+    ];
+
+    // Compute x0 (offset from grid cell)
+    let x0 = [
+        v[0] - i[0] + dot2(i, [C[0], C[0]]),
+        v[1] - i[1] + dot2(i, [C[0], C[0]])
+    ];
+
+    // Determine simplex traversal order
+    let i1 = x0[0] > x0[1] ? [1.0, 0.0] : [0.0, 1.0];
+
+    // Compute x1 and x2 (offsets for other simplex corners)
+    let x1 = [x0[0] + C[0] - i1[0], x0[1] + C[0] - i1[1]];
+    let x2 = [x0[0] + C[2], x0[1] + C[2]];
+
+    // Modulo grid coordinates
+    i[0] = mod289(i[0]);
+    i[1] = mod289(i[1]);
+
+    // Compute permutation indices
+    let p = [
+        permute(permute(i[1] + 0.0) + i[0] + 0.0),
+        permute(permute(i[1] + i1[1]) + i[0] + i1[0]),
+        permute(permute(i[1] + 1.0) + i[0] + 1.0)
+    ];
+
+    // Compute distances to corners
+    let m = [
+        Math.max(0.5 - dot2(x0, x0), 0.0),
+        Math.max(0.5 - dot2(x1, x1), 0.0),
+        Math.max(0.5 - dot2(x2, x2), 0.0)
+    ];
+
+    // Smooth the contribution weights
+    m = m.map(x => x * x);
+    m = m.map(x => x * x);
+
+    // Compute gradients
+    let x = p.map(pVal => 2.0 * fract(pVal * C[3]) - 1.0);
+    let h = x.map(xVal => Math.abs(xVal) - 0.5);
+    let ox = x.map(xVal => Math.floor(xVal + 0.5));
+    let a0 = x.map((xVal, idx) => xVal - ox[idx]);
+
+    // Normalize contributions
+    m = m.map((mVal, idx) => 
+        mVal * (1.79284291400159 - 0.85373472095314 * (a0[idx] * a0[idx] + h[idx] * h[idx]))
+    );
+
+    // Compute gradient contributions
+    let g = [
+        a0[0] * x0[0] + h[0] * x0[1],
+        a0[1] * x1[0] + h[1] * x1[1],
+        a0[2] * x2[0] + h[2] * x2[1]
+    ];
+
+    // Sum contributions
+    return 130.0 * (m[0] * g[0] + m[1] * g[1] + m[2] * g[2]);
+}
+
 
 // Simplex noise implementation
 class SimplexNoise {
