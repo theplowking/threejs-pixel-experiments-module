@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
-import * as water from './water2.js';
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
 // Internal boat state
 let boat = null;
@@ -36,32 +36,68 @@ function setupControls() {
  * @param {CANNON.World} cannonWorld
  * @param {THREE.Vector3} [position]
  */
-export function setup(scene, water, cannonWorld, position = new THREE.Vector3(0, 2, 0)) {
+export async function setup(scene, water, cannonWorld, position = new THREE.Vector3(0, 2, 0)) {
     world = cannonWorld;
     setupControls();
     // Create mesh
-    const boatGeometry = new THREE.BoxGeometry(2, 1, 4);
-    const boatMaterial = new THREE.MeshPhongMaterial({ color: 0x8b4513 });
-    const mesh = new THREE.Mesh(boatGeometry, boatMaterial);
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
-    mesh.position.copy(position);
+    // const boatGeometry = new THREE.BoxGeometry(2, 1, 4);
+    // const boatMaterial = new THREE.MeshPhongMaterial({ color: 0x8b4513 });
+    // const mesh = new THREE.Mesh(boatGeometry, boatMaterial);
+    //const mesh = await loadModel();
 
-    // Create physics body
-    const body = new CANNON.Body({
-        mass: 10,
-        position: new CANNON.Vec3(position.x, position.y, position.z),
-        angularDamping: 0.8,
-        linearDamping: 0.3
-    });
-    body.addShape(new CANNON.Box(new CANNON.Vec3(1, 0.5, 2)));
+    var loader = new GLTFLoader();
+        loader.load(
+            // resource URL
+            'models/pilot_schooner.glb',
+            //'models/ballycarbery_castle_ruin_scale.glb',
+            // called when the resource is loaded 
+            function ( gltf ) {
+    
+                var mesh = gltf.scene;
+                mesh.scale.set(0.2, 0.2, 0.2);
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+                mesh.position.copy(position);
+                console.log(mesh);
 
-    // Store references
-    boat = { mesh, body, water };
+                // Create physics body
+                const body = new CANNON.Body({
+                    mass: 10,
+                    position: new CANNON.Vec3(position.x, position.y, position.z),
+                    angularDamping: 0.8,
+                    linearDamping: 0.3
+                });
+                body.addShape(new CANNON.Box(new CANNON.Vec3(1, 0.5, 2)));
 
-    // Add to scene and world
-    scene.add(mesh);
-    world.addBody(body);
+                // Store references
+                boat = { mesh, body, water };
+
+                // Add to scene and world
+                scene.add(mesh);
+                world.addBody(body);
+            }
+        );
+
+    // mesh.castShadow = true;
+    // mesh.receiveShadow = true;
+    // mesh.position.copy(position);
+    // console.log(mesh);
+
+    // // Create physics body
+    // const body = new CANNON.Body({
+    //     mass: 10,
+    //     position: new CANNON.Vec3(position.x, position.y, position.z),
+    //     angularDamping: 0.8,
+    //     linearDamping: 0.3
+    // });
+    // body.addShape(new CANNON.Box(new CANNON.Vec3(1, 0.5, 2)));
+
+    // // Store references
+    // boat = { mesh, body, water };
+
+    // // Add to scene and world
+    // scene.add(mesh);
+    // world.addBody(body);
 
     // Create debug spheres for water surface at corners
     if (debugSpheres.length === 0) {
@@ -73,6 +109,38 @@ export function setup(scene, water, cannonWorld, position = new THREE.Vector3(0,
             debugSpheres.push(s);
         }
     }
+}
+
+async function loadModel() {
+    // Load a glTF resource
+        var loader = new GLTFLoader();
+        loader.load(
+            // resource URL
+            'models/pilot_schooner.glb',
+            //'models/ballycarbery_castle_ruin_scale.glb',
+            // called when the resource is loaded 
+            function ( gltf ) {
+    
+                var model = gltf.scene;
+    
+                // Scale the model
+                model.scale.set(100,100,100);
+                //model.scale.set(4,4,2);
+                
+                //model.rotation.y = Math.PI ; // 90 degrees in radians
+                // Enable shadows for the loaded model
+                
+                //model.children[0].geometry.center();
+    
+                const box = new THREE.Box3( ).setFromObject( model );
+                const c = box.getCenter( new THREE.Vector3( ) );
+                const size = box.getSize( new THREE.Vector3( ) );
+                //model.position.set( -c.x, size.y / 2 - c.y, -c.z ); // center the gltf scene
+                
+                //model.position.set(-52, 115, -1157.630);
+                return model;
+            }
+        );
 }
 
 /**
