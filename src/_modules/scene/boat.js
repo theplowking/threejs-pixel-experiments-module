@@ -39,65 +39,66 @@ function setupControls() {
 export async function setup(scene, water, cannonWorld, position = new THREE.Vector3(0, 2, 0)) {
     world = cannonWorld;
     setupControls();
-    // Create mesh
-    // const boatGeometry = new THREE.BoxGeometry(2, 1, 4);
-    // const boatMaterial = new THREE.MeshPhongMaterial({ color: 0x8b4513 });
-    // const mesh = new THREE.Mesh(boatGeometry, boatMaterial);
-    //const mesh = await loadModel();
-
-    var loader = new GLTFLoader();
-        loader.load(
-            // resource URL
-            'models/pilot_schooner.glb',
-            //'models/ballycarbery_castle_ruin_scale.glb',
-            // called when the resource is loaded 
-            function ( gltf ) {
     
-                var mesh = gltf.scene;
-                mesh.scale.set(0.2, 0.2, 0.2);
-                mesh.castShadow = true;
-                mesh.receiveShadow = true;
-                mesh.position.copy(position);
-                console.log(mesh);
 
-                // Create physics body
-                const body = new CANNON.Body({
-                    mass: 10,
-                    position: new CANNON.Vec3(position.x, position.y, position.z),
-                    angularDamping: 0.8,
-                    linearDamping: 0.3
-                });
-                body.addShape(new CANNON.Box(new CANNON.Vec3(1, 0.5, 2)));
+    // var loader = new GLTFLoader();
+    //     loader.load(
+    //         // resource URL
+    //         'models/pilot_schooner.glb',
+    //         //'models/ballycarbery_castle_ruin_scale.glb',
+    //         // called when the resource is loaded 
+    //         function ( gltf ) {
+    
+    //             var mesh = gltf.scene;
+    //             mesh.scale.set(0.2, 0.2, 0.2);
+    //             mesh.castShadow = true;
+    //             mesh.receiveShadow = true;
+    //             mesh.position.copy(position);
+    //             console.log(mesh);
 
-                // Store references
-                boat = { mesh, body, water };
+    //             // Create physics body
+    //             const body = new CANNON.Body({
+    //                 mass: 10,
+    //                 position: new CANNON.Vec3(position.x, position.y, position.z),
+    //                 angularDamping: 0.8,
+    //                 linearDamping: 0.3
+    //             });
+    //             body.addShape(new CANNON.Box(new CANNON.Vec3(1, 0.5, 2)));
 
-                // Add to scene and world
-                scene.add(mesh);
-                world.addBody(body);
-            }
-        );
+    //             // Store references
+    //             boat = { mesh, body, water };
 
-    // mesh.castShadow = true;
-    // mesh.receiveShadow = true;
-    // mesh.position.copy(position);
-    // console.log(mesh);
+    //             // Add to scene and world
+    //             scene.add(mesh);
+    //             world.addBody(body);
+    //         }
+    //     );
 
-    // // Create physics body
-    // const body = new CANNON.Body({
-    //     mass: 10,
-    //     position: new CANNON.Vec3(position.x, position.y, position.z),
-    //     angularDamping: 0.8,
-    //     linearDamping: 0.3
-    // });
-    // body.addShape(new CANNON.Box(new CANNON.Vec3(1, 0.5, 2)));
+    // Create mesh
+    const boatGeometry = new THREE.BoxGeometry(2, 1, 4);
+    const boatMaterial = new THREE.MeshPhongMaterial({ color: 0x8b4513 });
+    const mesh = new THREE.Mesh(boatGeometry, boatMaterial);
 
-    // // Store references
-    // boat = { mesh, body, water };
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    mesh.position.copy(position);
+    console.log(mesh);
 
-    // // Add to scene and world
-    // scene.add(mesh);
-    // world.addBody(body);
+    // Create physics body
+    const body = new CANNON.Body({
+        mass: 10,
+        position: new CANNON.Vec3(position.x, position.y, position.z),
+        angularDamping: 0.8,
+        linearDamping: 0.3
+    });
+    body.addShape(new CANNON.Box(new CANNON.Vec3(1, 0.5, 2)));
+
+    // Store references
+    boat = { mesh, body, water };
+
+    // Add to scene and world
+    scene.add(mesh);
+    world.addBody(body);
 
     // Create debug spheres for water surface at corners
     if (debugSpheres.length === 0) {

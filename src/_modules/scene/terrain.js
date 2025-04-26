@@ -1,28 +1,74 @@
 
 import * as THREE from 'three';
 import { SimplifyModifier } from 'three/addons/modifiers/SimplifyModifier.js';
+import { CausticsShader } from '../shaders/water/caustics_shader.js';
 
-export default function terrain(scene) {
+
+const terrainTexture = new THREE.TextureLoader().load('../textures/map2.jpg');
+
+let groundCaustics, groundMat;
+
+export function setup(scene) {
 
 
-    const groundGeo = new THREE.PlaneGeometry(1000, 1000, 128, 128);
+    const groundGeo = new THREE.PlaneGeometry(1000, 1000, 512, 512);
 
-    let disMap = new THREE.TextureLoader().load('textures/heightmap.png'); // heightmap filename from dat.gui choice
+    // Load the heightmap texture and set vertex heights after loading
+    const loader = new THREE.TextureLoader();
+    loader.load('textures/heightmap.png', (disMap) => {
+        // Create a canvas to extract pixel data
+        const img = disMap.image;
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const imgData = ctx.getImageData(0, 0, img.width, img.height).data;
 
-    // horizontal    vertical texture can repeat on object surface
-    disMap.wrapS = disMap.wrapT = THREE.RepeatWrapping;
-    //disMap.repeat.set(sliders.horTexture, sliders.vertTexture); // # horizontal & vertical textures
+        // Set vertex heights based on pixel data
+        const verts = groundGeo.attributes.position;
+        for (let i = 0; i < verts.count; i++) {
+            // Get uv for this vertex
+            const u = groundGeo.attributes.uv.getX(i);
+            const v = groundGeo.attributes.uv.getY(i);
+            // Map uv to pixel
+            const x = Math.floor(u * (img.width - 1));
+            const y = Math.floor((1 - v) * (img.height - 1));
+            const idx = (y * img.width + x) * 4;
+            const pixel = imgData[idx]; // R channel (greyscale)
+            // Scale pixel to height (0-255 to e.g. 0-100)
+            const scale = 100;
+            const height = (pixel / 255) * scale;
+            verts.setZ(i, height);
+        }
+        verts.needsUpdate = true;
+        groundGeo.computeVertexNormals();
+    });
 
-    const groundMat = new THREE.MeshStandardMaterial({
-        //color: 0x000000,
+    groundMat = new THREE.MeshStandardMaterial({
         wireframe: false,
-        displacementMap: disMap, // affects position of mesh vertices, white = highest, black = lowest
-        displacementScale: 100, // how much disMap affects mesh (def = 1)
-        //flatShading: true,
+        // No displacementMap or displacementScale
         receiveShadow: true
     });
 
-   const groundMesh = new THREE.Mesh(groundGeo, groundMat);
+    groundCaustics = new THREE.ShaderMaterial({
+            vertexShader: CausticsShader.vertexShader,
+            fragmentShader: CausticsShader.fragmentShader,
+            uniforms: {
+              uTexture: { value: terrainTexture },
+              uTime: { value: 0 },
+              uCausticsColor: { value: new THREE.Color('#ffffff') },
+              uCausticsIntensity: { value: 0.2 },
+              uCausticsScale: { value: 20.0 },
+              uCausticsSpeed: { value: 1.0 },
+              uCausticsThickness: { value: 0.4 },
+              uCausticsOffset: { value: 0.75 },
+              uHeightMin: { value: -1.0 },
+              uHeightMax: { value: 0.0 }
+            },
+          });
+
+   const groundMesh = new THREE.Mesh(groundGeo, groundCaustics);
    
     scene.add(groundMesh);
     groundMesh.rotation.x = -Math.PI / 2;
@@ -40,22 +86,22 @@ export default function terrain(scene) {
 	// 				simplified.rotation.x = - Math.PI / 2;
 	// 				scene.add( simplified );
 
-
+    // const textureLoader = new THREE.TextureLoader();
+    //     textureLoader.load( 'textures/map2.jpg', function ( map ) {
     
+    //         //map.wrapS = THREE.RepeatWrapping;
+    //         //map.wrapT = THREE.RepeatWrapping;
+    //         //map.anisotropy = 16;
+    //         //map.repeat.set( 4, 4 );
+    //         //map.colorSpace = THREE.SRGBColorSpace;
+    //         groundMat.map = map;
+    //         groundMat.needsUpdate = true;
     
-    const textureLoader = new THREE.TextureLoader();
-        textureLoader.load( 'textures/map2.jpg', function ( map ) {
-    
-            //map.wrapS = THREE.RepeatWrapping;
-            //map.wrapT = THREE.RepeatWrapping;
-            //map.anisotropy = 16;
-            //map.repeat.set( 4, 4 );
-            //map.colorSpace = THREE.SRGBColorSpace;
-            groundMat.map = map;
-            groundMat.needsUpdate = true;
-    
-        } );
+    //     } );
 
 }
 
 
+export function update(delta) {
+    groundCaustics.uniforms[ 'uTime' ].value += delta;
+}

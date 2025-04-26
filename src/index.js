@@ -18,7 +18,7 @@ import palettePass from './_modules/passes/palettePass.js';
 import Stats from 'three/examples/jsm/libs/stats.module.js';
 import { GUI } from 'three/examples/jsm/libs/lil-gui.module.min.js';
 
-import ground from './_modules/scene/ground.js';
+import * as ground from './_modules/scene/ground.js';
 import skybox from './_modules/scene/skybox.js';
 import * as water2 from './_modules/scene/water2.js';
 import * as boat from './_modules/scene/boat.js';
@@ -31,7 +31,7 @@ import * as rain from './_modules/scene/rain.js';
 import * as tree1 from './_modules/scene/tree1.js';
 import tree2 from './_modules/scene/tree2.js';
 import modelGLTF from './_modules/scene/modelGLTF.js';
-import terrain from './_modules/scene/terrain.js';
+import * as terrain from './_modules/scene/terrain.js';
 
 import * as character from './_modules/scene/character.js';
 
@@ -66,12 +66,12 @@ composer.addPass( outputPass );
 lights.setup(scene, gui); 
 
 //BACKGROUND
- //ground(scene);
+ //ground.setup(scene);
  skybox(scene);
  //modelGLTF(scene);
 water2.setup(scene, gui, 1000, 5);
 //water_noise_shader.setup(scene, gui, 1000, 5);
-terrain(scene);
+terrain.setup(scene);
 
 //OBJECTS
 //cube.setup(scene);
@@ -103,6 +103,8 @@ function animate() {
     //character.update(delta);
     //tree1.update(delta);
     //water_noise_shader.update(delta);
+    //ground.update(delta);
+    terrain.update(delta);
     water2.update(delta);
     boat.update(delta);
     // pixelPass.update(renderer, camera.camera);
