@@ -33,11 +33,9 @@ const CausticsShader = {
         void main() {
             vUv = uv;
             // If possible, pass world y position for masking
-            #ifdef USE_WORLD_POS
             // Get the world position of the vertex
             vec4 worldPosition = modelMatrix * vec4(position, 1.0);
             vWorldPosition = worldPosition.xyz;
-            #endif
             gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
         }`,
 
@@ -139,7 +137,7 @@ const CausticsShader = {
 
         void main() {
         // Compute opacity: 1.0 at uHeightMax, fades to 0.0 at uHeightMin
-        //float opacity = smoothstep(uHeightMin, uHeightMax, vWorldY);
+        //float opacity = smoothstep(uHeightMin, uHeightMax, vWorldPosition.y);
 
         float opacity;
 

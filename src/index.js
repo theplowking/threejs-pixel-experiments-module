@@ -66,12 +66,12 @@ composer.addPass( outputPass );
 lights.setup(scene, gui); 
 
 //BACKGROUND
- //ground.setup(scene);
+ ground.setup(scene);
  skybox(scene);
  //modelGLTF(scene);
 water2.setup(scene, gui, 1000, 5);
 //water_noise_shader.setup(scene, gui, 1000, 5);
-terrain.setup(scene);
+//terrain.setup(scene);
 
 //OBJECTS
 //cube.setup(scene);
@@ -103,8 +103,8 @@ function animate() {
     //character.update(delta);
     //tree1.update(delta);
     //water_noise_shader.update(delta);
-    //ground.update(delta);
-    terrain.update(delta);
+    ground.update(delta);
+    //terrain.update(delta);
     water2.update(delta);
     boat.update(delta);
     // pixelPass.update(renderer, camera.camera);

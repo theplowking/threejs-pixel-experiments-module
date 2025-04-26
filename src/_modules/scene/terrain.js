@@ -59,12 +59,12 @@ export function setup(scene) {
               uTime: { value: 0 },
               uCausticsColor: { value: new THREE.Color('#ffffff') },
               uCausticsIntensity: { value: 0.2 },
-              uCausticsScale: { value: 20.0 },
+              uCausticsScale: { value: 50.0 },
               uCausticsSpeed: { value: 1.0 },
               uCausticsThickness: { value: 0.4 },
               uCausticsOffset: { value: 0.75 },
-              uHeightMin: { value: -1.0 },
-              uHeightMax: { value: 0.0 }
+              uHeightMin: { value: -2.0 },
+              uHeightMax: { value: -0.5 }
             },
           });
 
