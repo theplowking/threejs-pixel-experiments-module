@@ -82,7 +82,7 @@ export async function setup(scene, water, cannonWorld, position = new THREE.Vect
     mesh.castShadow = true;
     mesh.receiveShadow = true;
     mesh.position.copy(position);
-    console.log(mesh);
+    //console.log(mesh);
 
     // Create physics body
     const body = new CANNON.Body({

@@ -3,6 +3,7 @@
 import * as THREE from 'three';
 
 import * as CANNON from 'cannon-es';
+//import CannonDebugger from 'cannon-es-debugger'
 
 import { Reflector } from 'three/examples/jsm/objects/Reflector.js'
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
@@ -35,10 +36,15 @@ import * as terrain from './_modules/scene/terrain.js';
 
 import * as character from './_modules/scene/character.js';
 
+
+
 // SCENE
 const scene = new THREE.Scene();
+scene.add(new THREE.AxesHelper(5))
 const world = new CANNON.World();
 world.gravity.set(0, -9.82, 0);
+
+//const cannonDebugRenderer = new CannonDebugger(scene, world);
 
 scene.background = new THREE.Color( 0xffffff );
 const renderer = new THREE.WebGLRenderer({antialias:true});
@@ -79,7 +85,7 @@ water2.setup(scene, gui, 1000, 5);
 // rain.setup(scene, camera.camera);
 //character.setup(scene, camera.camera);
 //tree1.setup(scene, gui);
-boat.setup(scene, water2, world, new THREE.Vector3(0, 2, 0));
+boat.setup(scene, water2, world, new THREE.Vector3(0, 5, 0));
 
 
 //gui
@@ -94,7 +100,8 @@ function animate() {
     const delta = clock.getDelta();
 
     world.step(1/60, delta, 3);
-
+    //cannonDebugRenderer.update(); // Update the CannonDebugger meshes
+    
     camera.update()    
     //cube.update(delta); 
     // fire.update(delta);

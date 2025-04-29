@@ -6,34 +6,34 @@ export let camera, controls;
 export function setup(renderer, composer) {
 
     const aspectRatio = window.innerWidth / window.innerHeight;
-    //camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 0.1, 1000 );
-    //camera.position.set(-30, 30, -30);
+    camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 0.1, 1000 );
+    camera.position.set(-30, 30, -30);
 
-    //camera.position.set(-9.77, 15, -6.4);
+    camera.position.set(-9.77, 15, -6.4);
 
 
-    //camera = new THREE.OrthographicCamera( - aspectRatio, aspectRatio, 1, - 1, 0.1, 1000 );
+    // camera = new THREE.OrthographicCamera( - aspectRatio, aspectRatio, 1, - 1, 0.1, 1000 );
     // camera.position.y = 2 * Math.tan( Math.PI / 6 );
     // camera.position.z = 2;
-    //camera.position.set(30, 30, 50);
+    // camera.position.set(30, 30, 50);
 
     // camera.position.x=-32.04142803632075;
     // camera.position.y=52.05705025664092;
     // camera.position.z=-30.65911073081037;
-    //camera.zoom=0.39721431845821925;
+    // camera.zoom=0.39721431845821925;
 
     //FAKE ORTHO
     // Create PerspectiveCamera
-    const fov = 1; // Narrow FOV to minimize perspective
-    const aspect = window.innerWidth / window.innerHeight;
-    const near = 1000; // Far enough to avoid near-plane clipping
-    const far = 20000; // Far-plane to encompass scene depth
-    camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+        // const fov = 1; // Narrow FOV to minimize perspective
+        // const aspect = window.innerWidth / window.innerHeight;
+        // const near = 1000; // Far enough to avoid near-plane clipping
+        // const far = 20000; // Far-plane to encompass scene depth
+        // camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 
-    // Position camera
-    const cameraDistance = 4000; // Large distance to reduce perspective distortion
-    camera.position.set(cameraDistance / 3, cameraDistance / 3, cameraDistance);
-    camera.lookAt(0, 0, 0);
+        // // Position camera
+        // const cameraDistance = 4000; // Large distance to reduce perspective distortion
+        // camera.position.set(cameraDistance / 3, cameraDistance / 3, cameraDistance);
+        // camera.lookAt(0, 0, 0);
 
     controls = new OrbitControls(camera, renderer.domElement);
     controls.target = new THREE.Vector3(0, 1, 0);
