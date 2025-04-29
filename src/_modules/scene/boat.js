@@ -99,7 +99,7 @@ export async function setup(scene, water, cannonWorld, position = new THREE.Vect
     const body = new CANNON.Body({
         mass: 8,
         position: new CANNON.Vec3(position.x, position.y, position.z),
-        angularDamping: 0.8,
+        angularDamping: 0.99,
         linearDamping: 0.3
     });
     body.addShape(new CANNON.Box(new CANNON.Vec3(1, 0.5, 2)));
@@ -136,7 +136,7 @@ function createVirtualKeel(boat, world, position) {
       mass: 2, // Make the keel heavier than the hull
       position: new CANNON.Vec3(position.x, position.y - 1, position.z), // Position below the hull
       shape: keelShape,
-      angularDamping: 0.8,
+      angularDamping: 0.99,
       linearDamping: 0.3
     });
     
@@ -259,8 +259,11 @@ export function update(delta) {
     if (keys.ArrowUp) {
         body.applyLocalForce(new CANNON.Vec3(0, 0, -forwardForce), new CANNON.Vec3(0, 0, 0));
     }
+    // if (keys.ArrowDown) {
+    //     body.applyLocalForce(new CANNON.Vec3(0, 0, forwardForce), new CANNON.Vec3(0, 0, 0));
+    // }
     if (keys.ArrowDown) {
-        body.applyLocalForce(new CANNON.Vec3(0, 0, forwardForce), new CANNON.Vec3(0, 0, 0));
+        body.applyLocalForce(new CANNON.Vec3(forwardForce, 0, 0), new CANNON.Vec3(0, 2, 0));
     }
     if (keys.ArrowLeft) {
         body.applyTorque(new CANNON.Vec3(0, turnForce, 0));
@@ -268,7 +271,7 @@ export function update(delta) {
     if (keys.ArrowRight) {
         body.applyTorque(new CANNON.Vec3(0, -turnForce, 0));
     }
-    
+
     // Drag
     const velocity = body.velocity;
     const localVel = body.quaternion.inverse().vmult(velocity);
