@@ -3,7 +3,7 @@ import * as CANNON from 'cannon-es';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
 // Internal boat state
-let boat = null;
+let boat, sail;
 let world = null;
 
 // Debug spheres for water height at corners
@@ -79,6 +79,17 @@ export async function setup(scene, water, cannonWorld, position = new THREE.Vect
     const boatMaterial = new THREE.MeshPhongMaterial({ color: 0x8b4513 });
     const mesh = new THREE.Mesh(boatGeometry, boatMaterial);
 
+    // Create mast mesh (visual representation)
+    const mastGeometry = new THREE.CylinderGeometry(0.1, 0.1, 3, 8);
+    const mastMaterial = new THREE.MeshPhongMaterial({ color: 0x8B4513 });
+    const mastMesh = new THREE.Mesh(mastGeometry, mastMaterial);
+    
+    // Position the mast at the center of the boat, with the bottom at the boat's deck
+    mastMesh.position.set(0, 1.5, 0);
+    
+    // Add the mast directly to the boat mesh so it moves with the boat
+    mesh.add(mastMesh);
+
     mesh.castShadow = true;
     mesh.receiveShadow = true;
     mesh.position.copy(position);
@@ -86,7 +97,7 @@ export async function setup(scene, water, cannonWorld, position = new THREE.Vect
 
     // Create physics body
     const body = new CANNON.Body({
-        mass: 10,
+        mass: 8,
         position: new CANNON.Vec3(position.x, position.y, position.z),
         angularDamping: 0.8,
         linearDamping: 0.3
@@ -100,6 +111,12 @@ export async function setup(scene, water, cannonWorld, position = new THREE.Vect
     scene.add(mesh);
     world.addBody(body);
 
+    //add keel
+    createVirtualKeel(body, world, position);
+
+    //add sail
+    createSail(body, world, position, scene);
+
     // Create debug spheres for water surface at corners
     if (debugSpheres.length === 0) {
         const sphereGeo = new THREE.SphereGeometry(0.15, 16, 16);
@@ -112,37 +129,98 @@ export async function setup(scene, water, cannonWorld, position = new THREE.Vect
     }
 }
 
-async function loadModel() {
-    // Load a glTF resource
-        var loader = new GLTFLoader();
-        loader.load(
-            // resource URL
-            'models/pilot_schooner.glb',
-            //'models/ballycarbery_castle_ruin_scale.glb',
-            // called when the resource is loaded 
-            function ( gltf ) {
+function createVirtualKeel(boat, world, position) {
+    // Create a separate physics body for the keel weight
+    const keelShape = new CANNON.Sphere(0.3);
+    const keelBody = new CANNON.Body({
+      mass: 2, // Make the keel heavier than the hull
+      position: new CANNON.Vec3(position.x, position.y - 1, position.z), // Position below the hull
+      shape: keelShape,
+      angularDamping: 0.8,
+      linearDamping: 0.3
+    });
     
-                var model = gltf.scene;
+    // Add the keel body to the physics world
+    world.addBody(keelBody);
     
-                // Scale the model
-                model.scale.set(100,100,100);
-                //model.scale.set(4,4,2);
-                
-                //model.rotation.y = Math.PI ; // 90 degrees in radians
-                // Enable shadows for the loaded model
-                
-                //model.children[0].geometry.center();
+    // Create a constraint to connect the hull and keel
+    // This will make them move together as one rigid body
+    const constraint = new CANNON.LockConstraint(
+      boat, 
+      keelBody, 
+      {
+        maxForce: 1e6 // Use a high max force to keep the constraint rigid
+      }
+    );
     
-                const box = new THREE.Box3( ).setFromObject( model );
-                const c = box.getCenter( new THREE.Vector3( ) );
-                const size = box.getSize( new THREE.Vector3( ) );
-                //model.position.set( -c.x, size.y / 2 - c.y, -c.z ); // center the gltf scene
-                
-                //model.position.set(-52, 115, -1157.630);
-                return model;
-            }
-        );
-}
+    // Add the constraint to the physics world
+    world.addConstraint(constraint);
+  }
+
+  function createSail(boatBody, world, position, scene) {
+    // Create a triangular sail
+    const sailShape = new THREE.Shape();
+    sailShape.moveTo(0, 0);
+    sailShape.lineTo(0, 2.5); // Height of the sail (along mast)
+    sailShape.lineTo(1.5, 0); // Width of sail at bottom
+    sailShape.lineTo(0, 0); // Back to origin to close shape
+    
+    const sailGeometry = new THREE.ShapeGeometry(sailShape);
+    const sailMaterial = new THREE.MeshPhongMaterial({ 
+      color: 0xFFFFFF,
+      side: THREE.DoubleSide // Make the sail visible from both sides
+    });
+    
+    const sailMesh = new THREE.Mesh(sailGeometry, sailMaterial);
+    
+    // Position the sail at the mast
+    sailMesh.position.set(position.x, position.y + 0.5, position.z);
+    
+    // Rotate the sail to be perpendicular to the boat
+    //sailMesh.rotation.y = Math.PI / 2;
+    
+    // We'll add the sail to the scene directly since it needs to rotate independently
+    scene.add(sailMesh);
+    
+    // Create physics body for the sail
+    // We'll use a simple box shape for physics
+    const sailShape3D = new CANNON.Box(new CANNON.Vec3(0.05, 1.25, 0.75));
+    
+    const sailBody = new CANNON.Body({
+      mass: 0.1, // Light weight
+      position: new CANNON.Vec3(0, 1.75, 0), // Position relative to boat
+      shape: sailShape3D
+    });
+    
+    // Restrict rotation to only around the Y axis (the mast)
+    //this.bodies.sail.angularFactor.set(0, 1, 0);
+    
+    world.addBody(sailBody);
+
+    sail = {sailMesh, sailBody};
+
+    // Create Hinge
+    createHinge(world, boatBody, sailBody);
+  }
+
+function createHinge(world, boatBody, sailBody) {
+   
+    const localYAxis = new CANNON.Vec3(0, 1, 0);
+
+    const hingeConstraint = new CANNON.HingeConstraint(
+      boatBody, // bodyA (the boat)
+      sailBody, // bodyB (the sail)
+      {
+        pivotA: new CANNON.Vec3(0, 2.5, 0),   // mast bottom
+        pivotB: new CANNON.Vec3(0, 2, 0),    // mast top
+        axisA: localYAxis, // Axis of rotation on the boat (mast direction)
+        axisB: localYAxis // Axis of rotation on the sail (mast direction)
+      }
+    );
+    
+    // Add the constraint to the physics world
+    world.addConstraint(hingeConstraint);
+  }
 
 /**
  * Update the boat physics and sync mesh
@@ -190,6 +268,7 @@ export function update(delta) {
     if (keys.ArrowRight) {
         body.applyTorque(new CANNON.Vec3(0, -turnForce, 0));
     }
+    
     // Drag
     const velocity = body.velocity;
     const localVel = body.quaternion.inverse().vmult(velocity);
@@ -202,4 +281,8 @@ export function update(delta) {
     // Sync mesh
     mesh.position.copy(body.position);
     mesh.quaternion.copy(body.quaternion);
+
+    sail.sailMesh.position.copy(sail.sailBody.position);
+    sail.sailMesh.quaternion.copy(sail.sailBody.quaternion);
+
 }
