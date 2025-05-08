@@ -351,6 +351,11 @@ export function update(delta) {
         // Local offset (y-axis is up mast): 1/3 of 2.5m mast height
         const offsetLocal = new CANNON.Vec3(0, 1, -1);
         sail.sailBody.applyLocalForce(lift, offsetLocal);
+        // Calculate component of lift in boat's forward direction and add to forward force
+        const forwardWorld = body.quaternion.vmult(new CANNON.Vec3(0, 0, -1)).unit();
+        const liftForwardMag = lift.dot(forwardWorld);
+        const liftForwardVec = forwardWorld.scale(liftForwardMag*10);
+        body.applyLocalForce(liftForwardVec, new CANNON.Vec3(0, 0, 0));
         // --- Debug lines ---
         // Mast top in world coords
         const mastTop = new THREE.Vector3().copy(sail.sailBody.position);
@@ -398,7 +403,7 @@ export function update(delta) {
  */
 export function calculateSailForces(windSpeed, windDir, sailAngle, area = 2.5) {
     // Air density (kg/m^3)
-    const rho = 1.225 / 10; // div by 100 to reduce power
+    const rho = 1.225 / 100; // div by 100 to reduce power
     // Relative wind angle to sail (angle of attack)
     const angleOfAttack = windDir - sailAngle;
     // Simplified coefficients (can be improved)
