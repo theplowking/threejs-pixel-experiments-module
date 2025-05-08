@@ -75,7 +75,7 @@ lights.setup(scene, gui);
  ground.setup(scene);
  skybox(scene);
  //modelGLTF(scene);
-water2.setup(scene, gui, 1000, 5);
+water2.setup(scene, gui, 500, 5);
 //water_noise_shader.setup(scene, gui, 1000, 5);
 //terrain.setup(scene);
 
@@ -110,7 +110,7 @@ function animate() {
     //character.update(delta);
     //tree1.update(delta);
     //water_noise_shader.update(delta);
-    ground.update(delta);
+    //ground.update(delta);
     //terrain.update(delta);
     water2.update(delta);
     boat.update(delta);

@@ -137,15 +137,16 @@ const CausticsShader = {
 
         void main() {
         // Compute opacity: 1.0 at uHeightMax, fades to 0.0 at uHeightMin
-        //float opacity = smoothstep(uHeightMin, uHeightMax, vWorldPosition.y);
+        float opacity = smoothstep(uHeightMin, uHeightMax, vWorldPosition.y);
 
-        float opacity;
+        // float opacity;
 
-        if (vWorldPosition.y < 0.1) {
-            opacity = 1.0; // Red tint below y = 0
-        } else {
-            opacity = 0.0; // Original texture above y = 0
-        }
+        if (vWorldPosition.y > uHeightMax) {
+            opacity = 0.0; // Red tint below y = 0
+        } 
+        //     else {
+        //     opacity = 0.0; // Original texture above y = 0
+        // }
 
         vec4 texColor = texture2D(uTexture, vUv);
 

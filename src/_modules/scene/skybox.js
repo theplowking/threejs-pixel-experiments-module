@@ -6,7 +6,7 @@ import * as THREE from 'three';
 export default function skybox(scene) {
 
     const cubeTextureLoader = new THREE.CubeTextureLoader();
-    cubeTextureLoader.setPath( 'textures/sunset/' );
+    cubeTextureLoader.setPath( 'textures/sky/' );
 
     const cubeTexture = cubeTextureLoader.load( [
         'px.png', // positive x

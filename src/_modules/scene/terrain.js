@@ -59,20 +59,22 @@ export function setup(scene) {
               uTime: { value: 0 },
               uCausticsColor: { value: new THREE.Color('#ffffff') },
               uCausticsIntensity: { value: 0.2 },
-              uCausticsScale: { value: 50.0 },
+              uCausticsScale: { value: 200.0 },
               uCausticsSpeed: { value: 1.0 },
               uCausticsThickness: { value: 0.4 },
               uCausticsOffset: { value: 0.75 },
-              uHeightMin: { value: -2.0 },
-              uHeightMax: { value: -0.5 }
+              uHeightMin: { value: -1.5 },
+              uHeightMax: { value: 4.5 }
             },
+            receiveShadow: true,
+            castShadow: true
           });
 
    const groundMesh = new THREE.Mesh(groundGeo, groundCaustics);
    
     scene.add(groundMesh);
     groundMesh.rotation.x = -Math.PI / 2;
-    groundMesh.position.y = -0.5;
+    groundMesh.position.y = 0;
 
     // const modifier = new SimplifyModifier();
 

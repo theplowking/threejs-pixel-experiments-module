@@ -166,6 +166,7 @@ function createVirtualKeel(boat, world, position) {
     sailShape.lineTo(0, 0); // Back to origin to close shape
     
     const sailGeometry = new THREE.ShapeGeometry(sailShape);
+    sailGeometry.rotateY(Math.PI / 2);
     const sailMaterial = new THREE.MeshPhongMaterial({ 
       color: 0xFFFFFF,
       side: THREE.DoubleSide // Make the sail visible from both sides
