@@ -125,7 +125,10 @@ export async function setup(scene, water, cannonWorld, position = new THREE.Vect
     //add sail
     createSail(body, world, position, scene);
 
-    // Create debug spheres for water surface at corners
+    createStoppers(body, world, position, 1);
+    createStoppers(body, world, position, -1);
+
+   // Create debug spheres for water surface at corners
     if (debugSpheres.length === 0) {
         const sphereGeo = new THREE.SphereGeometry(0.15, 16, 16);
         const sphereMat = new THREE.MeshBasicMaterial({ color: 0x3388ff, transparent: true, opacity: 0.6 });
@@ -135,6 +138,34 @@ export async function setup(scene, water, cannonWorld, position = new THREE.Vect
             debugSpheres.push(s);
         }
     }
+}
+
+function createStoppers(boat, world, position, offset) {
+  // Create a separate physics body for the keel weight
+  const stopperShape = new CANNON.Sphere(0.5);
+  const stopperBody = new CANNON.Body({
+    mass: 1, // Make the keel heavier than the hull
+    position: new CANNON.Vec3(position.x + offset, position.y + 1, position.z -1), // Position below the hull
+    shape: stopperShape,
+    angularDamping: 0.99,
+    linearDamping: 0.3
+  });
+  
+  // Add the keel body to the physics world
+  world.addBody(stopperBody);
+  
+  // Create a constraint to connect the hull and keel
+  // This will make them move together as one rigid body
+  const constraint = new CANNON.LockConstraint(
+    boat, 
+    stopperBody, 
+    {
+      maxForce: 1e6 // Use a high max force to keep the constraint rigid
+    }
+  );
+  
+  // Add the constraint to the physics world
+  world.addConstraint(constraint);
 }
 
 function createVirtualKeel(boat, world, position) {
@@ -171,10 +202,10 @@ let windLine = null, liftLine = null, dragLine = null;
 function createSail(boatBody, world, position, scene) {
     // Create a triangular sail
     const sailShape = new THREE.Shape();
-    sailShape.moveTo(0, 0);
+    sailShape.moveTo(0, -1);
     sailShape.lineTo(0, 2.5); // Height of the sail (along mast)
-    sailShape.lineTo(1.5, 0); // Width of sail at bottom
-    sailShape.lineTo(0, 0); // Back to origin to close shape
+    sailShape.lineTo(1.5, -1); // Width of sail at bottom
+    sailShape.lineTo(0, -1); // Back to origin to close shape
     
     const sailGeometry = new THREE.ShapeGeometry(sailShape);
     sailGeometry.rotateY(Math.PI / 2);
@@ -186,7 +217,7 @@ function createSail(boatBody, world, position, scene) {
     const sailMesh = new THREE.Mesh(sailGeometry, sailMaterial);
     
     // Position the sail at the mast
-    sailMesh.position.set(position.x, position.y + 0.5, position.z);
+    sailMesh.position.set(position.x, position.y - 2, position.z);
     
     // Rotate the sail to be perpendicular to the boat
     //sailMesh.rotation.y = Math.PI / 2;
@@ -196,11 +227,11 @@ function createSail(boatBody, world, position, scene) {
     
     // Create physics body for the sail
     // We'll use a simple box shape for physics
-    const sailShape3D = new CANNON.Box(new CANNON.Vec3(0.05, 1.25, 0.75));
+    const sailShape3D = new CANNON.Box(new CANNON.Vec3(0.05, 1.25, 2));
     
     const sailBody = new CANNON.Body({
-      mass: 0.1, // Light weight
-      position: new CANNON.Vec3(0, 1.75, 0), // Position relative to boat
+      mass: 0.1, // Light weightposition: new CANNON.Vec3(0, 2.5, -1), // Position relative to boat
+      //position: new CANNON.Vec3(0, 2.5, 0),
       shape: sailShape3D
     });
     
@@ -236,8 +267,8 @@ function createHinge(world, boatBody, sailBody) {
       boatBody, // bodyA (the boat)
       sailBody, // bodyB (the sail)
       {
-        pivotA: new CANNON.Vec3(0, 2.5, 0),   // mast bottom
-        pivotB: new CANNON.Vec3(0, 2, 0),    // mast top
+        pivotA: new CANNON.Vec3(0, 2, 0),   // mast bottom
+        pivotB: new CANNON.Vec3(0, 0, 0),    // mast top
         axisA: localYAxis, // Axis of rotation on the boat (mast direction)
         axisB: localYAxis // Axis of rotation on the sail (mast direction)
       }
@@ -367,7 +398,7 @@ export function update(delta) {
  */
 export function calculateSailForces(windSpeed, windDir, sailAngle, area = 2.5) {
     // Air density (kg/m^3)
-    const rho = 1.225 / 100; // div by 100 to reduce power
+    const rho = 1.225 / 10; // div by 100 to reduce power
     // Relative wind angle to sail (angle of attack)
     const angleOfAttack = windDir - sailAngle;
     // Simplified coefficients (can be improved)

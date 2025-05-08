@@ -100,6 +100,7 @@ function animate() {
     const delta = clock.getDelta();
 
     world.step(1/60, delta, 3);
+    
     cannonDebugRenderer.update(); // Update the CannonDebugger meshes
     
     camera.update()    
