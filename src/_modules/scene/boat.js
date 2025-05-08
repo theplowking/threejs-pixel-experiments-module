@@ -6,6 +6,12 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 let boat, sail;
 let world = null;
 
+// Wind parameters (exposed to GUI)
+export const wind = {
+    speed: 0, // wind speed (force magnitude)
+    direction: 0 // wind direction in degrees (0 = +Z, 90 = +X)
+};
+
 // Debug spheres for water height at corners
 let debugSpheres = [];
 
@@ -37,6 +43,8 @@ function setupControls() {
  * @param {THREE.Vector3} [position]
  */
 export async function setup(scene, water, cannonWorld, position = new THREE.Vector3(0, 2, 0)) {
+    
+
     world = cannonWorld;
     setupControls();
     
@@ -157,7 +165,10 @@ function createVirtualKeel(boat, world, position) {
     world.addConstraint(constraint);
   }
 
-  function createSail(boatBody, world, position, scene) {
+  // Debug lines for wind, lift, drag
+let windLine = null, liftLine = null, dragLine = null;
+
+function createSail(boatBody, world, position, scene) {
     // Create a triangular sail
     const sailShape = new THREE.Shape();
     sailShape.moveTo(0, 0);
@@ -201,8 +212,21 @@ function createVirtualKeel(boat, world, position) {
     sail = {sailMesh, sailBody};
 
     // Create Hinge
-    createHinge(world, boatBody, sailBody);
+  createHinge(world, boatBody, sailBody);
+
+  // Helper to create a line
+  function makeLine(color) {
+    const mat = new THREE.LineBasicMaterial({ color });
+    const geom = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 2, 0)
+    ]);
+    return new THREE.Line(geom, mat);
   }
+  windLine = makeLine(0x3388ff); // blue
+  liftLine = makeLine(0x33ff33); // green
+  dragLine = makeLine(0xff3333); // red
+  scene.add(windLine, liftLine, dragLine);
+}
 
 function createHinge(world, boatBody, sailBody) {
    
@@ -254,6 +278,12 @@ export function update(delta) {
             body.applyLocalForce(force, corner);
         }
     });
+
+
+    // Wind force
+    
+
+
     // Controls
     const forwardForce = 50;
     const turnForce = 25;
@@ -273,6 +303,41 @@ export function update(delta) {
         body.applyTorque(new CANNON.Vec3(0, -turnForce, 0));
     }
 
+    // --- Sail Forces & Debug Lines ---
+    if (sail && sail.sailBody && windLine && liftLine && dragLine) {
+        // Wind direction in radians (convert from degrees)
+        const windDirRad = wind.direction * Math.PI / 180;
+        // Get sail angle (assume Y-axis rotation)
+        const sailQuat = sail.sailBody.quaternion;
+        const sailEuler = new CANNON.Vec3();
+        sailQuat.toEuler(sailEuler, 'YZX'); // Yaw = sailEuler.y
+        const sailAngle = sailEuler.y;
+        // Calculate forces
+        const { lift, drag, angleOfAttack } = calculateSailForces(wind.speed, windDirRad, sailAngle);
+        // --- Apply lift force at 1/3 up the mast ---
+        // Mast base position
+        const mastBase = sail.sailBody.position;
+        // Local offset (y-axis is up mast): 1/3 of 2.5m mast height
+        const offsetLocal = new CANNON.Vec3(0, 1, -1);
+        sail.sailBody.applyLocalForce(lift, offsetLocal);
+        // --- Debug lines ---
+        // Mast top in world coords
+        const mastTop = new THREE.Vector3().copy(sail.sailBody.position);
+        mastTop.y += 2.5; // Assume mast height
+
+        const CoE = new THREE.Vector3().copy(sail.sailBody.position);
+        CoE.add(offsetLocal);
+
+        // Wind vector (scale for visibility)
+        const windVec = new THREE.Vector3(Math.sin(windDirRad), 0, Math.cos(windDirRad)).multiplyScalar(wind.speed * 0.2);
+        // Convert CANNON.Vec3 to THREE.Vector3 for lift/drag, scale for visibility
+        const liftVec = new THREE.Vector3(lift.x, lift.y, lift.z).multiplyScalar(1);
+        //const dragVec = new THREE.Vector3(drag.x, drag.y, drag.z).multiplyScalar(0.05);
+        // Update line geometries
+        windLine.geometry.setFromPoints([mastTop, mastTop.clone().add(windVec)]);
+        liftLine.geometry.setFromPoints([CoE, CoE.clone().add(liftVec)]);
+        //dragLine.geometry.setFromPoints([mastTop, mastTop.clone().add(dragVec)]);
+    }
     // Drag
     const velocity = body.velocity;
     const localVel = body.quaternion.inverse().vmult(velocity);
@@ -289,4 +354,45 @@ export function update(delta) {
     sail.sailMesh.position.copy(sail.sailBody.position);
     sail.sailMesh.quaternion.copy(sail.sailBody.quaternion);
 
+}
+
+
+/**
+ * Calculate lift and drag forces on the sail due to wind
+ * @param {number} windSpeed - wind speed (magnitude)
+ * @param {number} windDir - wind direction (radians, 0 = +Z)
+ * @param {number} sailAngle - sail orientation (radians, 0 = +Z)
+ * @param {number} area - sail area (m^2)
+ * @returns {{lift: CANNON.Vec3, drag: CANNON.Vec3, angleOfAttack: number}}
+ */
+export function calculateSailForces(windSpeed, windDir, sailAngle, area = 2.5) {
+    // Air density (kg/m^3)
+    const rho = 1.225 / 100; // div by 100 to reduce power
+    // Relative wind angle to sail (angle of attack)
+    const angleOfAttack = windDir - sailAngle;
+    // Simplified coefficients (can be improved)
+    const CL = Math.sin(2 * angleOfAttack); // Lift coefficient (max at ~45deg)
+    const CD = 0.1 + 0.9 * Math.pow(Math.sin(angleOfAttack), 2); // Drag coefficient
+    // Dynamic pressure
+    const q = 0.5 * rho * windSpeed * windSpeed;
+    // Lift and drag magnitudes
+    const liftMag = q * area * CL;
+    const dragMag = q * area * CD;
+    // Wind direction unit vector (XZ plane)
+    const windVec = new CANNON.Vec3(Math.sin(windDir), 0, Math.cos(windDir));
+    // Perpendicular to wind (right-hand, +Y up)
+    const liftDir = new CANNON.Vec3(-windVec.z, 0, windVec.x); // 90deg CCW
+    // Drag is along wind
+    const dragDir = windVec.clone();
+    // Final force vectors
+    const lift = liftDir.scale(liftMag);
+    const drag = dragDir.scale(dragMag);
+    return { lift, drag, angleOfAttack };
+}
+
+export function setupGUI(gui) {
+    const windFolder = gui.addFolder('Wind');
+    windFolder.add(wind, 'speed', 0, 50, 0.1).name('Wind Speed');
+    windFolder.add(wind, 'direction', 0, 359, 1).name('Wind Direction (deg)');
+    windFolder.open();
 }

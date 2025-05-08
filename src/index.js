@@ -128,4 +128,5 @@ animate();
 function setupGUI(gui) {
     //gui.useLocalStorage = true;
     pixelPass.setupGUI(gui);
+    boat.setupGUI(gui);
 }
