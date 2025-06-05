@@ -197,7 +197,7 @@ function createVirtualKeel(boat, world, position) {
   }
 
   // Debug lines for wind, lift, drag
-let windLine = null, liftLine = null, dragLine = null;
+let windLine = null, liftLine = null, dragLine = null, forwardForceLine = null;
 
 function createSail(boatBody, world, position, scene) {
     // Create a triangular sail
@@ -256,7 +256,8 @@ function createSail(boatBody, world, position, scene) {
   windLine = makeLine(0x3388ff); // blue
   liftLine = makeLine(0x33ff33); // green
   dragLine = makeLine(0xff3333); // red
-  scene.add(windLine, liftLine, dragLine);
+  forwardForceLine = makeLine(0xffff00); // yellow for forward force
+  scene.add(windLine, liftLine, dragLine, forwardForceLine);
 }
 
 function createHinge(world, boatBody, sailBody) {
@@ -335,43 +336,55 @@ export function update(delta) {
     }
 
     // --- Sail Forces & Debug Lines ---
-    if (sail && sail.sailBody && windLine && liftLine && dragLine) {
+    if (sail && sail.sailBody && windLine && liftLine && dragLine && forwardForceLine) {
         // Wind direction in radians (convert from degrees)
         const windDirRad = wind.direction * Math.PI / 180;
+
+        // Wind vector (scale for visibility)
+        const windVec = new THREE.Vector3(Math.sin(windDirRad), 0, Math.cos(windDirRad)).multiplyScalar(wind.speed * 0.2);
+        
+
         // Get sail angle (assume Y-axis rotation)
         const sailQuat = sail.sailBody.quaternion;
         const sailEuler = new CANNON.Vec3();
         sailQuat.toEuler(sailEuler, 'YZX'); // Yaw = sailEuler.y
         const sailAngle = sailEuler.y;
+
         // Calculate forces
         const { lift, drag, angleOfAttack } = calculateSailForces(wind.speed, windDirRad, sailAngle);
         // --- Apply lift force at 1/3 up the mast ---
         // Mast base position
         const mastBase = sail.sailBody.position;
         // Local offset (y-axis is up mast): 1/3 of 2.5m mast height
-        const offsetLocal = new CANNON.Vec3(0, 1, -1);
-        sail.sailBody.applyLocalForce(lift, offsetLocal);
+        const offsetLocal = new CANNON.Vec3(0, 0, -2);
+        sail.sailBody.applyLocalForce(windVec.multiplyScalar(5), offsetLocal);
+
         // Calculate component of lift in boat's forward direction and add to forward force
         const forwardWorld = body.quaternion.vmult(new CANNON.Vec3(0, 0, -1)).unit();
         const liftForwardMag = lift.dot(forwardWorld);
         const liftForwardVec = forwardWorld.scale(liftForwardMag*10);
-        body.applyLocalForce(liftForwardVec, new CANNON.Vec3(0, 0, 0));
+        //body.applyLocalForce(liftForwardVec, new CANNON.Vec3(0, 0, 0));
+
+        body.applyLocalForce(new CANNON.Vec3(0, 0, -liftForwardMag * 10), new CANNON.Vec3(0, 0, 0));
+
         // --- Debug lines ---
         // Mast top in world coords
         const mastTop = new THREE.Vector3().copy(sail.sailBody.position);
         mastTop.y += 2.5; // Assume mast height
 
+        //        const CoE = sail.sailBody.position.vadd(sail.sailBody.quaternion.vmult(offsetLocal));
         const CoE = new THREE.Vector3().copy(sail.sailBody.position);
-        CoE.add(offsetLocal);
+        //CoE.add(offsetLocal);
 
-        // Wind vector (scale for visibility)
-        const windVec = new THREE.Vector3(Math.sin(windDirRad), 0, Math.cos(windDirRad)).multiplyScalar(wind.speed * 0.2);
         // Convert CANNON.Vec3 to THREE.Vector3 for lift/drag, scale for visibility
         const liftVec = new THREE.Vector3(lift.x, lift.y, lift.z).multiplyScalar(1);
-        //const dragVec = new THREE.Vector3(drag.x, drag.y, drag.z).multiplyScalar(0.05);
+        // Forward force vector (same as liftForwardVec, scale for visibility)
+        const forwardForceVec = new THREE.Vector3(liftForwardVec.x, liftForwardVec.y, liftForwardVec.z).multiplyScalar(0.1);
+
         // Update line geometries
         windLine.geometry.setFromPoints([mastTop, mastTop.clone().add(windVec)]);
         liftLine.geometry.setFromPoints([CoE, CoE.clone().add(liftVec)]);
+        forwardForceLine.geometry.setFromPoints([mastTop, mastTop.clone().add(forwardForceVec)]);
         //dragLine.geometry.setFromPoints([mastTop, mastTop.clone().add(dragVec)]);
     }
     // Drag
