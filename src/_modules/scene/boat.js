@@ -365,7 +365,7 @@ export function update(delta) {
         const liftForwardVec = forwardWorld.scale(liftForwardMag*10);
         //body.applyLocalForce(liftForwardVec, new CANNON.Vec3(0, 0, 0));
 
-        //body.applyLocalForce(new CANNON.Vec3(0, 0, -liftForwardMag * 10), new CANNON.Vec3(0, 0, 0));
+        body.applyLocalForce(new CANNON.Vec3(0, 0, Math.abs(liftForwardMag) * 10), new CANNON.Vec3(0, 0, 0));
 
         // --- Debug lines ---
         // Mast top in world coords
