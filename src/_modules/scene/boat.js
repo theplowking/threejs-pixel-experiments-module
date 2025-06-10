@@ -356,8 +356,8 @@ export function update(delta) {
         // Mast base position
         const mastBase = sail.sailBody.position;
         // Local offset (y-axis is up mast): 1/3 of 2.5m mast height
-        const offsetLocal = new CANNON.Vec3(0, 0, -2);
-        sail.sailBody.applyLocalForce(windVec.multiplyScalar(5), offsetLocal);
+        const offsetLocal = new CANNON.Vec3(0, 1, -1);
+        sail.sailBody.applyLocalForce(lift, offsetLocal);
 
         // Calculate component of lift in boat's forward direction and add to forward force
         const forwardWorld = body.quaternion.vmult(new CANNON.Vec3(0, 0, -1)).unit();
@@ -365,7 +365,7 @@ export function update(delta) {
         const liftForwardVec = forwardWorld.scale(liftForwardMag*10);
         //body.applyLocalForce(liftForwardVec, new CANNON.Vec3(0, 0, 0));
 
-        body.applyLocalForce(new CANNON.Vec3(0, 0, -liftForwardMag * 10), new CANNON.Vec3(0, 0, 0));
+        //body.applyLocalForce(new CANNON.Vec3(0, 0, -liftForwardMag * 10), new CANNON.Vec3(0, 0, 0));
 
         // --- Debug lines ---
         // Mast top in world coords
@@ -419,6 +419,9 @@ export function calculateSailForces(windSpeed, windDir, sailAngle, area = 2.5) {
     const rho = 1.225 / 100; // div by 100 to reduce power
     // Relative wind angle to sail (angle of attack)
     const angleOfAttack = windDir - sailAngle;
+    // console.log(
+    //   `Wind Dir: ${windDir * 180 / Math.PI}°, Sail Angle: ${sailAngle * 180 / Math.PI}°, AoA: ${angleOfAttack * 180 / Math.PI}°`
+    // );
     // Simplified coefficients (can be improved)
     const CL = Math.sin(2 * angleOfAttack); // Lift coefficient (max at ~45deg)
     const CD = 0.1 + 0.9 * Math.pow(Math.sin(angleOfAttack), 2); // Drag coefficient
@@ -429,8 +432,23 @@ export function calculateSailForces(windSpeed, windDir, sailAngle, area = 2.5) {
     const dragMag = q * area * CD;
     // Wind direction unit vector (XZ plane)
     const windVec = new CANNON.Vec3(Math.sin(windDir), 0, Math.cos(windDir));
+
     // Perpendicular to wind (right-hand, +Y up)
-    const liftDir = new CANNON.Vec3(-windVec.z, 0, windVec.x); // 90deg CCW
+    //const liftDir = new CANNON.Vec3(-windVec.z, 0, windVec.x); // 90deg CCW
+
+    if(Math.abs(angleOfAttack) > (Math.PI * 1/2) && Math.abs(angleOfAttack) < (Math.PI * 3/2) ) {
+        // If angle of attack is more than 90 degrees, flip lift direction
+        //sailAngle += Math.PI; // Flip sail angle
+        console.log("Flipping lift direction");
+        //liftDir.negate();
+    }
+
+
+    const sailVec = new CANNON.Vec3(Math.sin(sailAngle), 0, Math.cos(sailAngle));
+
+    const liftDir = new CANNON.Vec3(-sailVec.z, 0, sailVec.x); // 90deg CCW
+
+    
     // Drag is along wind
     const dragDir = windVec.clone();
     // Final force vectors
