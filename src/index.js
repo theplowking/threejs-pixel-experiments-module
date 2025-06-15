@@ -101,7 +101,7 @@ function animate() {
 
     world.step(1/60, delta, 3);
     
-    cannonDebugRenderer.update(); // Update the CannonDebugger meshes
+    //cannonDebugRenderer.update(); // Update the CannonDebugger meshes
     
     camera.update()    
     //cube.update(delta); 

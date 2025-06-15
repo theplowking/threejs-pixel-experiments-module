@@ -3,7 +3,7 @@ import * as CANNON from 'cannon-es';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
 // Internal boat state
-let boat, sail;
+let boat, sail, jib;
 let world = null;
 
 // Wind parameters (exposed to GUI)
@@ -125,8 +125,15 @@ export async function setup(scene, water, cannonWorld, position = new THREE.Vect
     //add sail
     createSail(body, world, position, scene);
 
+    createJib(body, world, position, scene);
+
+    //mainsheet stoppers
     createStoppers(body, world, position, 1);
     createStoppers(body, world, position, -1);
+
+    //jib stoppeds
+    createStoppers(body, world, position, 0.9, 1);
+    createStoppers(body, world, position, -0.9, 1);
 
    // Create debug spheres for water surface at corners
     if (debugSpheres.length === 0) {
@@ -140,12 +147,12 @@ export async function setup(scene, water, cannonWorld, position = new THREE.Vect
     }
 }
 
-function createStoppers(boat, world, position, offset) {
+function createStoppers(boat, world, position, offsetX, offsetZ = -1) {
   // Create a separate physics body for the keel weight
   const stopperShape = new CANNON.Sphere(0.5);
   const stopperBody = new CANNON.Body({
-    mass: 1, // Make the keel heavier than the hull
-    position: new CANNON.Vec3(position.x + offset, position.y + 1, position.z -1), // Position below the hull
+    mass: 0.1, // Make the keel heavier than the hull
+    position: new CANNON.Vec3(position.x + offsetX, position.y + 1, position.z + offsetZ), // Position below the hull
     shape: stopperShape,
     angularDamping: 0.99,
     linearDamping: 0.3
@@ -227,13 +234,15 @@ function createSail(boatBody, world, position, scene) {
     
     // Create physics body for the sail
     // We'll use a simple box shape for physics
-    const sailShape3D = new CANNON.Box(new CANNON.Vec3(0.05, 1.25, 2));
+    const sailShape3D = new CANNON.Box(new CANNON.Vec3(0.05, 1.25, 1));
     
     const sailBody = new CANNON.Body({
       mass: 0.1, // Light weightposition: new CANNON.Vec3(0, 2.5, -1), // Position relative to boat
-      //position: new CANNON.Vec3(0, 2.5, 0),
+      //position: new CANNON.Vec3(0, 0, -2),
       shape: sailShape3D
     });
+
+    sailBody.shapeOffsets[0] = new CANNON.Vec3(0, 0, -1);
     
     // Restrict rotation to only around the Y axis (the mast)
     //this.bodies.sail.angularFactor.set(0, 1, 0);
@@ -260,16 +269,80 @@ function createSail(boatBody, world, position, scene) {
   scene.add(windLine, liftLine, dragLine, forwardForceLine);
 }
 
-function createHinge(world, boatBody, sailBody) {
+function createJib(boatBody, world, position, scene) {
+    // Create a triangular sail
+    const sailShape = new THREE.Shape();
+    sailShape.moveTo(-1.75, -1);
+    sailShape.lineTo(0, 2.5); // Height of the sail (along mast)
+    sailShape.lineTo(-0.25, -0.5); // Width of sail at bottom
+    //sailShape.lineTo(0, -1); // Back to origin to close shape
+    
+    const sailGeometry = new THREE.ShapeGeometry(sailShape);
+    sailGeometry.rotateY(Math.PI / 2);
+    const sailMaterial = new THREE.MeshPhongMaterial({ 
+      color: 0xFFFFFF,
+      side: THREE.DoubleSide // Make the sail visible from both sides
+    });
+    
+    const jibMesh = new THREE.Mesh(sailGeometry, sailMaterial);
+    
+    // Position the sail at the mast
+    //jibMesh.position.set(position.x, position.y - 1.5, position.z);
+    
+    // Rotate the sail to be perpendicular to the boat
+    //sailMesh.rotation.y = Math.PI / 2;
+    
+    // We'll add the sail to the scene directly since it needs to rotate independently
+    scene.add(jibMesh);
+    
+    // Create physics body for the sail
+    // We'll use a simple box shape for physics
+    const sailShape3D = new CANNON.Box(new CANNON.Vec3(0.05, 1.25, 0.75));
+
+    // How to make a mesh with a single triangle
+    // const vertices = [
+    //     0, 0, 0, // vertex 0
+    //     1.25, 0, 0, // vertex 1
+    //     0, 1, 0  // vertex 2
+    // ]
+    // const indices = [
+    //     0, 1, 2  // triangle 0
+    // ]
+    // const trimeshShape = new CANNON.Trimesh(vertices, indices)
+    
+    const jibBody = new CANNON.Body({
+      mass: 0.1, // Light weightposition: new CANNON.Vec3(0, 2.5, -1), // Position relative to boat
+      shape: sailShape3D
+    });
+
+
+    jibBody.shapeOffsets[0] = new CANNON.Vec3(0, 0, 1);
+    
+    // Restrict rotation to only around the Y axis (the mast)
+    //this.bodies.sail.angularFactor.set(0, 1, 0);
+
+    // jibBody.collisionFilterGroup = 0;
+    // jibBody.collisionFilterMask = 0;
+    
+    world.addBody(jibBody);
+
+    jib = {jibMesh, jibBody};
+
+    // Create Hinge
+  createHinge(world, boatBody, jibBody, 1.75, -0.5);
+
+}
+
+function createHinge(world, boatBody, sailBody, offset = 0, rake = 0) {
    
-    const localYAxis = new CANNON.Vec3(0, 1, 0);
+    const localYAxis = new CANNON.Vec3(0, 1, rake);
 
     const hingeConstraint = new CANNON.HingeConstraint(
       boatBody, // bodyA (the boat)
       sailBody, // bodyB (the sail)
       {
-        pivotA: new CANNON.Vec3(0, 2, 0),   // mast bottom
-        pivotB: new CANNON.Vec3(0, 0, 0),    // mast top
+        pivotA: new CANNON.Vec3(0, 2, offset + rake),   // mast bottom
+        pivotB: new CANNON.Vec3(0, 0, offset + rake),    // mast top
         axisA: localYAxis, // Axis of rotation on the boat (mast direction)
         axisB: localYAxis // Axis of rotation on the sail (mast direction)
       }
@@ -305,7 +378,7 @@ export function update(delta) {
 
         const depth = waterHeight - worldPoint.y;
         if (depth > 0) {
-            const buoyancyForce = depth * 40;
+            const buoyancyForce = depth * 100;
             const force = new CANNON.Vec3(0, buoyancyForce, 0);
             body.applyLocalForce(force, corner);
         }
@@ -318,13 +391,13 @@ export function update(delta) {
 
     // Controls
     const forwardForce = 50;
-    const turnForce = 25;
-    if (keys.ArrowUp) {
-        body.applyLocalForce(new CANNON.Vec3(0, 0, -forwardForce), new CANNON.Vec3(0, 0, 0));
-    }
-    // if (keys.ArrowDown) {
-    //     body.applyLocalForce(new CANNON.Vec3(0, 0, forwardForce), new CANNON.Vec3(0, 0, 0));
+    const turnForce = 50;
+    // if (keys.ArrowUp) {
+    //     body.applyLocalForce(new CANNON.Vec3(0, 0, -forwardForce), new CANNON.Vec3(0, 0, 0));
     // }
+    if (keys.ArrowDown) {
+        body.applyLocalForce(new CANNON.Vec3(0, 0, forwardForce), new CANNON.Vec3(0, 0, 0));
+    }
     if (keys.ArrowDown) {
         body.applyLocalForce(new CANNON.Vec3(forwardForce, 0, 0), new CANNON.Vec3(0, 2, 0));
     }
@@ -356,8 +429,11 @@ export function update(delta) {
         // Mast base position
         const mastBase = sail.sailBody.position;
         // Local offset (y-axis is up mast): 1/3 of 2.5m mast height
-        const offsetLocal = new CANNON.Vec3(0, 1, -1);
+        let offsetLocal = new CANNON.Vec3(0, 2, -0.05);
         sail.sailBody.applyLocalForce(lift, offsetLocal);
+
+        offsetLocal = new CANNON.Vec3(0, 2, 0);
+        jib.jibBody.applyLocalForce(lift, offsetLocal);
 
         // Calculate component of lift in boat's forward direction and add to forward force
         const forwardWorld = body.quaternion.vmult(new CANNON.Vec3(0, 0, -1)).unit();
@@ -390,10 +466,10 @@ export function update(delta) {
     // Drag
     const velocity = body.velocity;
     const localVel = body.quaternion.inverse().vmult(velocity);
-    const lateralDrag = -30;
+    const lateralDrag = -500;
     const sideForce = new CANNON.Vec3(localVel.x * lateralDrag, 0, 0);
     body.applyLocalForce(sideForce, new CANNON.Vec3(0, 0, 0));
-    const longitudinalDrag = -5;
+    const longitudinalDrag = -2;
     const forwardForceResistance = new CANNON.Vec3(0, 0, localVel.z * longitudinalDrag);
     body.applyLocalForce(forwardForceResistance, new CANNON.Vec3(0, 0, 0));
     // Sync mesh
@@ -402,6 +478,9 @@ export function update(delta) {
 
     sail.sailMesh.position.copy(sail.sailBody.position);
     sail.sailMesh.quaternion.copy(sail.sailBody.quaternion);
+
+    jib.jibMesh.position.copy(jib.jibBody.position);
+    jib.jibMesh.quaternion.copy(jib.jibBody.quaternion);
 
 }
 
