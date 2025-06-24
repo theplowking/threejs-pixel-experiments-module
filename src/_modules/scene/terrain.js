@@ -15,7 +15,7 @@ export function setup(scene) {
 
     // Load the heightmap texture and set vertex heights after loading
     const loader = new THREE.TextureLoader();
-    loader.load('textures/heightmap.png', (disMap) => {
+    loader.load('textures/heightmap2.png', (disMap) => {
         // Create a canvas to extract pixel data
         const img = disMap.image;
         const canvas = document.createElement('canvas');
@@ -39,7 +39,7 @@ export function setup(scene) {
             // Scale pixel to height (0-255 to e.g. 0-100)
             const scale = 100;
             const height = (pixel / 255) * scale;
-            verts.setZ(i, height);
+            verts.setZ(i, height + 2.2);
         }
         verts.needsUpdate = true;
         groundGeo.computeVertexNormals();

@@ -8,7 +8,7 @@ export default function modelGTLF(scene, forceFlat = false) {
     var loader = new GLTFLoader();
     loader.load(
         // resource URL
-        'models/an_afternoon_in_a_persian_garden.glb',
+        'models/fantasy_town.glb',
         //'models/ballycarbery_castle_ruin_scale.glb',
         // called when the resource is loaded 
         function ( gltf ) {
@@ -16,8 +16,8 @@ export default function modelGTLF(scene, forceFlat = false) {
             var model = gltf.scene;
 
             // Scale the model
-            model.scale.set(0.01, 0.01, 0.01);
-            //model.scale.set(4,4,2);
+            //model.scale.set(0.01, 0.01, 0.01);
+            model.scale.set(10,10,10);
             
             //model.rotation.y = Math.PI ; // 90 degrees in radians
             // Enable shadows for the loaded model
@@ -29,7 +29,7 @@ export default function modelGTLF(scene, forceFlat = false) {
             const size = box.getSize( new THREE.Vector3( ) );
             //model.position.set( -c.x, size.y / 2 - c.y, -c.z ); // center the gltf scene
             
-            //model.position.set(-52, 115, -1157.630);
+            model.position.set(21,4,-40);
 
             if(forceFlat)
             {
