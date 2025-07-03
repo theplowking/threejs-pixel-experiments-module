@@ -3,7 +3,7 @@ import * as CANNON from 'cannon-es';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
 // Internal boat state
-let boat, sail, jib;
+export let boat, sail, jib;
 let world = null;
 
 // Wind parameters (exposed to GUI)
@@ -390,22 +390,27 @@ export function update(delta) {
 
 
     // Controls
-    const forwardForce = 50;
-    const turnForce = 50;
-    // if (keys.ArrowUp) {
-    //     body.applyLocalForce(new CANNON.Vec3(0, 0, -forwardForce), new CANNON.Vec3(0, 0, 0));
+    let engineForce = 0;
+    let rudderForce = 0;
+    let sailForwardForce = 0;
+    if (keys.ArrowUp) {
+        //body.applyLocalForce(new CANNON.Vec3(0, 0, forwardForce), new CANNON.Vec3(0, 0, 0));
+        engineForce = 50
+    }
+    if (keys.ArrowDown) {
+        engineForce = -50
+        //body.applyLocalForce(new CANNON.Vec3(0, 0, -forwardForce), new CANNON.Vec3(0, 0, 0));
+    }
+    // if (keys.ArrowDown) {
+    //     body.applyLocalForce(new CANNON.Vec3(forwardForce, 0, 0), new CANNON.Vec3(0, 2, 0));
     // }
-    if (keys.ArrowDown) {
-        body.applyLocalForce(new CANNON.Vec3(0, 0, forwardForce), new CANNON.Vec3(0, 0, 0));
-    }
-    if (keys.ArrowDown) {
-        body.applyLocalForce(new CANNON.Vec3(forwardForce, 0, 0), new CANNON.Vec3(0, 2, 0));
-    }
     if (keys.ArrowLeft) {
-        body.applyTorque(new CANNON.Vec3(0, turnForce, 0));
+        rudderForce = 50;
+        //body.applyTorque(new CANNON.Vec3(0, turnForce, 0));
     }
     if (keys.ArrowRight) {
-        body.applyTorque(new CANNON.Vec3(0, -turnForce, 0));
+        rudderForce = -50;
+        //body.applyTorque(new CANNON.Vec3(0, -turnForce, 0));
     }
 
     // --- Sail Forces & Debug Lines ---
@@ -429,10 +434,10 @@ export function update(delta) {
         // Mast base position
         const mastBase = sail.sailBody.position;
         // Local offset (y-axis is up mast): 1/3 of 2.5m mast height
-        let offsetLocal = new CANNON.Vec3(0, 2, -0.05);
+        let offsetLocal = new CANNON.Vec3(0, 3, -0.1);
         sail.sailBody.applyLocalForce(lift, offsetLocal);
 
-        offsetLocal = new CANNON.Vec3(0, 2, 0);
+        offsetLocal = new CANNON.Vec3(0, 1, -0.1);
         jib.jibBody.applyLocalForce(lift, offsetLocal);
 
         // Calculate component of lift in boat's forward direction and add to forward force
@@ -441,7 +446,9 @@ export function update(delta) {
         const liftForwardVec = forwardWorld.scale(liftForwardMag*10);
         //body.applyLocalForce(liftForwardVec, new CANNON.Vec3(0, 0, 0));
 
-        body.applyLocalForce(new CANNON.Vec3(0, 0, Math.abs(liftForwardMag) * 10), new CANNON.Vec3(0, 0, 0));
+        //SAIL FOREWARD FORCE
+        sailForwardForce = Math.abs(liftForwardMag) * 10;
+        
 
         // --- Debug lines ---
         // Mast top in world coords
@@ -463,13 +470,25 @@ export function update(delta) {
         forwardForceLine.geometry.setFromPoints([mastTop, mastTop.clone().add(forwardForceVec)]);
         //dragLine.geometry.setFromPoints([mastTop, mastTop.clone().add(dragVec)]);
     }
-    // Drag
+
+    //apply sail or engine force
     const velocity = body.velocity;
     const localVel = body.quaternion.inverse().vmult(velocity);
+
+    const finalForce = Math.max(engineForce, sailForwardForce);
+
+    //adjust rudder for speed
+    rudderForce = rudderForce * (0.5 + (Math.pow(localVel.z, 2) * 0.1));
+
+    body.applyLocalForce(new CANNON.Vec3(0, 0, finalForce), new CANNON.Vec3(0, 0, 0));
+    body.applyTorque(new CANNON.Vec3(0, rudderForce, 0));
+
+    // Drag
+    
     const lateralDrag = -500;
     const sideForce = new CANNON.Vec3(localVel.x * lateralDrag, 0, 0);
     body.applyLocalForce(sideForce, new CANNON.Vec3(0, 0, 0));
-    const longitudinalDrag = -2;
+    const longitudinalDrag = -0.002;
     const forwardForceResistance = new CANNON.Vec3(0, 0, localVel.z * longitudinalDrag);
     body.applyLocalForce(forwardForceResistance, new CANNON.Vec3(0, 0, 0));
     // Sync mesh
@@ -511,17 +530,6 @@ export function calculateSailForces(windSpeed, windDir, sailAngle, area = 2.5) {
     const dragMag = q * area * CD;
     // Wind direction unit vector (XZ plane)
     const windVec = new CANNON.Vec3(Math.sin(windDir), 0, Math.cos(windDir));
-
-    // Perpendicular to wind (right-hand, +Y up)
-    //const liftDir = new CANNON.Vec3(-windVec.z, 0, windVec.x); // 90deg CCW
-
-    if(Math.abs(angleOfAttack) > (Math.PI * 1/2) && Math.abs(angleOfAttack) < (Math.PI * 3/2) ) {
-        // If angle of attack is more than 90 degrees, flip lift direction
-        //sailAngle += Math.PI; // Flip sail angle
-        console.log("Flipping lift direction");
-        //liftDir.negate();
-    }
-
 
     const sailVec = new CANNON.Vec3(Math.sin(sailAngle), 0, Math.cos(sailAngle));
 

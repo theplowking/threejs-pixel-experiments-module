@@ -85,8 +85,8 @@ terrain.setup(scene);
 // rain.setup(scene, camera.camera);
 //character.setup(scene, camera.camera);
 //tree1.setup(scene, gui);
+//boat.setup(scene, water2, world, new THREE.Vector3(0, 5, 0));
 boat.setup(scene, water2, world, new THREE.Vector3(0, 5, 0));
-
 
 //gui
 setupGUI(gui);
@@ -103,7 +103,7 @@ function animate() {
     
     //cannonDebugRenderer.update(); // Update the CannonDebugger meshes
     
-    camera.update()    
+    camera.update(boat)    
     //cube.update(delta); 
     // fire.update(delta);
     // rain.update(delta);
