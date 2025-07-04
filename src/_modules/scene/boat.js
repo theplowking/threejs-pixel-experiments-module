@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { USDZLoader } from 'three/examples/jsm/loaders/USDZLoader.js';
 
 // Internal boat state
 export let boat, sail, jib;
@@ -49,91 +50,117 @@ export async function setup(scene, water, cannonWorld, position = new THREE.Vect
     setupControls();
     
 
-    // var loader = new GLTFLoader();
-    //     loader.load(
-    //         // resource URL
-    //         'models/pilot_schooner.glb',
-    //         //'models/ballycarbery_castle_ruin_scale.glb',
-    //         // called when the resource is loaded 
-    //         function ( gltf ) {
+    var loader = new GLTFLoader();
+        loader.load(
+            // resource URL
+            'models/boat_painted.glb',
+            //'models/ballycarbery_castle_ruin_scale.glb',
+            // called when the resource is loaded 
+            function ( gltf ) {
     
-    //             var mesh = gltf.scene;
-    //             mesh.scale.set(0.2, 0.2, 0.2);
-    //             mesh.castShadow = true;
-    //             mesh.receiveShadow = true;
-    //             mesh.position.copy(position);
-    //             console.log(mesh);
+                var mesh = gltf.scene;
+                mesh.scale.set(0.02, 0.02, 0.02);
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+                mesh.position.copy(position);
+                
+                // // Create mast mesh (visual representation)
+                const mastGeometry = new THREE.CylinderGeometry(0.04, 0.08, 6, 8);
+                const mastMaterial = new THREE.MeshPhongMaterial({ color: 0x8B4513 });
+                const mastMesh = new THREE.Mesh(mastGeometry, mastMaterial);
+                
+                mastMesh.scale.set(50,50,50);
+                // Position the mast at the center of the boat, with the bottom at the boat's deck
+                mastMesh.position.set(0, 200, 0);
+                
+                // Add the mast directly to the boat mesh so it moves with the boat
+                mesh.add(mastMesh);
 
-    //             // Create physics body
-    //             const body = new CANNON.Body({
-    //                 mass: 10,
-    //                 position: new CANNON.Vec3(position.x, position.y, position.z),
-    //                 angularDamping: 0.8,
-    //                 linearDamping: 0.3
-    //             });
-    //             body.addShape(new CANNON.Box(new CANNON.Vec3(1, 0.5, 2)));
+                // Create physics body
+                const body = new CANNON.Body({
+                    mass: 25,
+                    position: new CANNON.Vec3(position.x, position.y, position.z),
+                    angularDamping: 0.8,
+                    linearDamping: 0.3
+                });
+                body.addShape(new CANNON.Box(new CANNON.Vec3(1, 0.5, 2)));
 
-    //             // Store references
-    //             boat = { mesh, body, water };
+                // Store references
+                boat = { mesh, body, water };
 
-    //             // Add to scene and world
-    //             scene.add(mesh);
-    //             world.addBody(body);
-    //         }
-    //     );
+                // Add to scene and world
+                scene.add(mesh);
+                world.addBody(body);
 
-    // Create mesh
-    const boatGeometry = new THREE.BoxGeometry(2, 1, 4);
-    const boatMaterial = new THREE.MeshPhongMaterial({ color: 0x8b4513 });
-    const mesh = new THREE.Mesh(boatGeometry, boatMaterial);
+                //add keel
+                createVirtualKeel(body, world, position);
 
-    // Create mast mesh (visual representation)
-    const mastGeometry = new THREE.CylinderGeometry(0.1, 0.1, 3, 8);
-    const mastMaterial = new THREE.MeshPhongMaterial({ color: 0x8B4513 });
-    const mastMesh = new THREE.Mesh(mastGeometry, mastMaterial);
+                //add sail
+                createSail(body, world, position, scene);
+
+                createJib(body, world, position, scene);
+
+                //mainsheet stoppers
+                createStoppers(body, world, position, 1);
+                createStoppers(body, world, position, -1);
+
+                //jib stoppeds
+                createStoppers(body, world, position, 0.9, 1);
+                createStoppers(body, world, position, -0.9, 1);
+
+
+            }
+        );
     
-    // Position the mast at the center of the boat, with the bottom at the boat's deck
-    mastMesh.position.set(0, 1.5, 0);
+    // const [ boatModel ] = await Promise.all( [
+		// 			usdzLoader.loadAsync( 'models/boat.usdz' ),
+		// 		] );
+		// 		// model
+
+		// 		boatModel.position.y = 0.25;
+		// 		boatModel.position.z = - 0.25;
+		// 		scene.add( boatModel );
+
+    // BOX MODEL
+
+    // // Create mesh
+    // const boatGeometry = new THREE.BoxGeometry(2, 1, 4);
+    // const boatMaterial = new THREE.MeshPhongMaterial({ color: 0x8b4513 });
+    // const mesh = new THREE.Mesh(boatGeometry, boatMaterial);
+
+    // // Create mast mesh (visual representation)
+    // const mastGeometry = new THREE.CylinderGeometry(0.1, 0.1, 3, 8);
+    // const mastMaterial = new THREE.MeshPhongMaterial({ color: 0x8B4513 });
+    // const mastMesh = new THREE.Mesh(mastGeometry, mastMaterial);
     
-    // Add the mast directly to the boat mesh so it moves with the boat
-    mesh.add(mastMesh);
+    // // Position the mast at the center of the boat, with the bottom at the boat's deck
+    // mastMesh.position.set(0, 1.5, 0);
+    
+    // // Add the mast directly to the boat mesh so it moves with the boat
+    // mesh.add(mastMesh);
 
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
-    mesh.position.copy(position);
-    //console.log(mesh);
+    // mesh.castShadow = true;
+    // mesh.receiveShadow = true;
+    // mesh.position.copy(position);
+    // //console.log(mesh);
 
-    // Create physics body
-    const body = new CANNON.Body({
-        mass: 8,
-        position: new CANNON.Vec3(position.x, position.y, position.z),
-        angularDamping: 0.99,
-        linearDamping: 0.3
-    });
-    body.addShape(new CANNON.Box(new CANNON.Vec3(1, 0.5, 2)));
+    // // Create physics body
+    // const body = new CANNON.Body({
+    //     mass: 8,
+    //     position: new CANNON.Vec3(position.x, position.y, position.z),
+    //     angularDamping: 0.99,
+    //     linearDamping: 0.3
+    // });
+    // body.addShape(new CANNON.Box(new CANNON.Vec3(1, 0.5, 2)));
 
-    // Store references
-    boat = { mesh, body, water };
+    // // Store references
+    // boat = { mesh, body, water };
 
-    // Add to scene and world
-    scene.add(mesh);
-    world.addBody(body);
+    // // Add to scene and world
+    // scene.add(mesh);
+    // world.addBody(body);
 
-    //add keel
-    createVirtualKeel(body, world, position);
-
-    //add sail
-    createSail(body, world, position, scene);
-
-    createJib(body, world, position, scene);
-
-    //mainsheet stoppers
-    createStoppers(body, world, position, 1);
-    createStoppers(body, world, position, -1);
-
-    //jib stoppeds
-    createStoppers(body, world, position, 0.9, 1);
-    createStoppers(body, world, position, -0.9, 1);
+    
 
    // Create debug spheres for water surface at corners
     if (debugSpheres.length === 0) {
@@ -211,7 +238,8 @@ function createSail(boatBody, world, position, scene) {
     const sailShape = new THREE.Shape();
     sailShape.moveTo(0, -1);
     sailShape.lineTo(0, 2.5); // Height of the sail (along mast)
-    sailShape.lineTo(1.5, -1); // Width of sail at bottom
+    sailShape.lineTo(2, 4); // GAFF
+    sailShape.lineTo(3, -0.75); // Width of sail at bottom
     sailShape.lineTo(0, -1); // Back to origin to close shape
     
     const sailGeometry = new THREE.ShapeGeometry(sailShape);
@@ -272,8 +300,8 @@ function createSail(boatBody, world, position, scene) {
 function createJib(boatBody, world, position, scene) {
     // Create a triangular sail
     const sailShape = new THREE.Shape();
-    sailShape.moveTo(-1.75, -1);
-    sailShape.lineTo(0, 2.5); // Height of the sail (along mast)
+    sailShape.moveTo(-2.9, -1);
+    sailShape.lineTo(0, 4); // Height of the sail (along mast)
     sailShape.lineTo(-0.25, -0.5); // Width of sail at bottom
     //sailShape.lineTo(0, -1); // Back to origin to close shape
     
@@ -329,7 +357,7 @@ function createJib(boatBody, world, position, scene) {
     jib = {jibMesh, jibBody};
 
     // Create Hinge
-  createHinge(world, boatBody, jibBody, 1.75, -0.5);
+  createHinge(world, boatBody, jibBody, 2.9, -0.5);
 
 }
 
@@ -373,7 +401,7 @@ export function update(delta) {
         
         // Update debug sphere position
         if (debugSpheres[i]) {
-            debugSpheres[i].position.set(worldPoint.x, waterHeight, worldPoint.z);
+            //debugSpheres[i].position.set(worldPoint.x, waterHeight, worldPoint.z);
         }
 
         const depth = waterHeight - worldPoint.y;
@@ -478,7 +506,7 @@ export function update(delta) {
     const finalForce = Math.max(engineForce, sailForwardForce);
 
     //adjust rudder for speed
-    rudderForce = rudderForce * (0.5 + (Math.pow(localVel.z, 2) * 0.1));
+    rudderForce = rudderForce * (0.5 + (Math.pow(localVel.z, 2) * 0.02));
 
     body.applyLocalForce(new CANNON.Vec3(0, 0, finalForce), new CANNON.Vec3(0, 0, 0));
     body.applyTorque(new CANNON.Vec3(0, rudderForce, 0));

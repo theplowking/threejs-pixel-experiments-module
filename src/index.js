@@ -34,6 +34,7 @@ import tree2 from './_modules/scene/tree2.js';
 import modelGLTF from './_modules/scene/modelGLTF.js';
 import * as terrain from './_modules/scene/terrain.js';
 
+import * as town from './_modules/scene/town.js';
 import * as character from './_modules/scene/character.js';
 
 
@@ -74,11 +75,11 @@ lights.setup(scene, gui);
 //BACKGROUND
  //ground.setup(scene);
  skybox(scene);
- modelGLTF(scene);
+ //modelGLTF(scene);
 water2.setup(scene, gui, 500, 5);
 //water_noise_shader.setup(scene, gui, 1000, 5);
 terrain.setup(scene);
-
+town.setup(scene);
 //OBJECTS
 //cube.setup(scene);
 // fire.setup(scene, camera.camera);

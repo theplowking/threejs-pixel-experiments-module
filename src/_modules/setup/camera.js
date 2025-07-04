@@ -62,18 +62,21 @@ export function setup(renderer, composer) {
 export function update(boat) {
 
     controls.update();
-    let target = boat.boat.body.position;
 
-    const velocity = boat.boat.body.velocity;
-    const localVel = boat.boat.body.quaternion.inverse().vmult(velocity);
+    if(boat !== undefined && boat.boat !== undefined && boat.boat.body !== undefined) {
+        let target = boat.boat.body.position;
 
-    // Position camera
-    let boatVel = Math.max(0, Math.abs(localVel.z) - 0.5)
-    const cameraDistance = 1000 + (boatVel * 500) // Large distance to reduce perspective distortion
-    //console.log(localVel.z, cameraDistance);
-    camera.position.set(-cameraDistance / 3, cameraDistance / 3, cameraDistance);
-    
-    camera.lookAt(target.x, 5, target.z);
+        const velocity = boat.boat.body.velocity;
+        const localVel = boat.boat.body.quaternion.inverse().vmult(velocity);
+
+        // Position camera
+        let boatVel = Math.max(0, Math.abs(localVel.z) - 0.5)
+        const cameraDistance = 1000 + (boatVel * 300) // Large distance to reduce perspective distortion
+        //console.log(localVel.z, cameraDistance);
+        camera.position.set(-cameraDistance / 3, cameraDistance / 3, cameraDistance);
+        
+        camera.lookAt(target.x, 5, target.z);
+    }
 
 }
 
