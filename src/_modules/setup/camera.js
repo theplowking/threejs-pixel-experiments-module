@@ -73,7 +73,7 @@ export function update(boat) {
         let boatVel = Math.max(0, Math.abs(localVel.z) - 0.5)
         const cameraDistance = 1000 + (boatVel * 300) // Large distance to reduce perspective distortion
         //console.log(localVel.z, cameraDistance);
-        camera.position.set(-cameraDistance / 3, cameraDistance / 3, cameraDistance);
+        //camera.position.set(-cameraDistance / 3, cameraDistance / 3, cameraDistance);
         
         camera.lookAt(target.x, 5, target.z);
     }

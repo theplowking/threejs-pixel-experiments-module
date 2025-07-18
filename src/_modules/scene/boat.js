@@ -232,6 +232,7 @@ function createVirtualKeel(boat, world, position) {
 
   // Debug lines for wind, lift, drag
 let windLine = null, liftLine = null, dragLine = null, forwardForceLine = null;
+let mastLight = null;
 
 function createSail(boatBody, world, position, scene) {
     // Create a triangular sail
@@ -253,6 +254,14 @@ function createSail(boatBody, world, position, scene) {
     
     // Position the sail at the mast
     sailMesh.position.set(position.x, position.y - 2, position.z);
+    
+    // Create point light at top of mast
+    mastLight = new THREE.PointLight(0xffffff, 1, 0, 0.5);
+    mastLight.position.set(position.x, position.y + 4, position.z); // Top of mast
+    mastLight.castShadow = true;
+    mastLight.shadow.mapSize.width = 512;
+    mastLight.shadow.mapSize.height = 512;
+    scene.add(mastLight);
     
     // Rotate the sail to be perpendicular to the boat
     //sailMesh.rotation.y = Math.PI / 2;
@@ -522,6 +531,12 @@ export function update(delta) {
     // Sync mesh
     mesh.position.copy(body.position);
     mesh.quaternion.copy(body.quaternion);
+
+    // Update mast light position to follow boat
+    if (mastLight) {
+        mastLight.position.copy(body.position);
+        mastLight.position.y += 4; // Keep at top of mast height
+    }
 
     sail.sailMesh.position.copy(sail.sailBody.position);
     sail.sailMesh.quaternion.copy(sail.sailBody.quaternion);
