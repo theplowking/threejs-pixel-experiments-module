@@ -61,7 +61,15 @@ export async function setup(scene, water, cannonWorld, position = new THREE.Vect
                 var mesh = gltf.scene;
                 mesh.scale.set(0.02, 0.02, 0.02);
                 mesh.castShadow = true;
-                mesh.receiveShadow = true;
+                //mesh.receiveShadow = true;
+
+                mesh.traverse(function (child) {
+                    if (child.isMesh) {
+                        child.castShadow = true;
+                        //child.receiveShadow = true;
+                    }
+                });
+
                 mesh.position.copy(position);
                 
                 // // Create mast mesh (visual representation)
@@ -261,7 +269,7 @@ function createSail(boatBody, world, position, scene) {
     mastLight.castShadow = true;
     mastLight.shadow.mapSize.width = 512;
     mastLight.shadow.mapSize.height = 512;
-    scene.add(mastLight);
+    //scene.add(mastLight);
     
     // Rotate the sail to be perpendicular to the boat
     //sailMesh.rotation.y = Math.PI / 2;

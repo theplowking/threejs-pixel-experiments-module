@@ -1,9 +1,11 @@
 import * as THREE from 'three';
 import { SimplifyModifier } from 'three/addons/modifiers/SimplifyModifier.js';
-import { CausticsShader } from '../shaders/water/caustics_shader_flat.js';
+
+//import { CausticsShader } from '../shaders/water/caustics_shader_flat.js';
+import { CausticsShader } from '../shaders/water/caustics_shader_flat_oncompile.js';
 
 
-const terrainTexture = new THREE.TextureLoader().load('../textures/map2.jpg');
+const terrainTexture = new THREE.TextureLoader().load('../textures/tex_island.png');
 
 let groundCaustics, groundMat, groundCausticsStandard;
 
@@ -43,7 +45,7 @@ export function setup(scene) {
 
     // Load the heightmap texture and set vertex heights after loading
     const loader = new THREE.TextureLoader();
-    loader.load('textures/heightmap2.png', (disMap) => {
+    loader.load('textures/heightmap_island.png', (disMap) => {
         // Create a canvas to extract pixel data
         const img = disMap.image;
         const canvas = document.createElement('canvas');
@@ -68,7 +70,7 @@ export function setup(scene) {
             // Scale pixel to height (0-255 to e.g. 0-100)
             const scale = 100;
             const height = (pixel / 255) * scale;
-            verts.setZ(i, height + 2.2);
+            verts.setZ(i, height - 60);
         }
         verts.needsUpdate = true;
         groundGeo.computeVertexNormals();
@@ -94,9 +96,7 @@ export function setup(scene) {
               uCausticsOffset: { value: 0.75 },
               uHeightMin: { value: 1 },
               uHeightMax: { value: 5 }
-            },
-            receiveShadow: true,
-            castShadow: true
+            }
           });
 
     groundCausticsStandard = new THREE.MeshStandardMaterial({
@@ -109,19 +109,28 @@ export function setup(scene) {
     groundCausticsStandard.onBeforeCompile = (shader) => {
         // Add caustics uniforms
         shader.uniforms.uTime = { value: 0 };
-        shader.uniforms.uCausticsColor = { value: new THREE.Color('#ffffff') };
+        shader.uniforms.uCausticsColor = { value: new THREE.Color('#f7fdfd') };
         shader.uniforms.uCausticsIntensity = { value: 0.2 };
-        shader.uniforms.uCausticsScale = { value: 200.0 };
+        shader.uniforms.uCausticsScale = { value: 500.0 };
         shader.uniforms.uCausticsSpeed = { value: 1.0 };
-        shader.uniforms.uCausticsThickness = { value: 0.4 };
+        shader.uniforms.uCausticsThickness = { value: 0.5 };
         shader.uniforms.uCausticsOffset = { value: 0.75 };
-        shader.uniforms.uHeightMin = { value: 1 };
+        shader.uniforms.uHeightMin = { value: -10 };
         shader.uniforms.uHeightMax = { value: 5 };
 
         // Store shader reference for updates
         groundCausticsStandard.userData.shader = shader;
 
-        // Inject vertex shader modifications
+        // Extract caustics calculation from original shader's main function
+        const causticsFragmentShader = CausticsShader.fragmentShader;
+
+        console.log(shader.vertexShader);
+        console.log(shader.fragmentShader);
+
+        shader.vertexShader = CausticsShader.vertexShader;
+        shader.fragmentShader = CausticsShader.fragmentShader;
+        
+        // // Inject vertex shader modifications
         // shader.vertexShader = shader.vertexShader.replace(
         //     '#include <common>',
         //     `#include <common>
@@ -129,58 +138,25 @@ export function setup(scene) {
         // ).replace(
         //     '#include <worldpos_vertex>',
         //     `#include <worldpos_vertex>
-        //     vWorldPosition = worldPosition.xyz;`
+        //     vWorldPosition = (modelMatrix * vec4(transformed, 1.0)).xyz;`
         // );
 
-        // Inject fragment shader modifications (single replacement)
+        // // Inject fragment shader modifications
         // shader.fragmentShader = shader.fragmentShader.replace(
         //     '#include <common>',
         //     `#include <common>
-        //     uniform float uTime;
-        //     uniform vec3 uCausticsColor;
-        //     uniform float uCausticsIntensity;
-        //     uniform float uCausticsScale;
-        //     uniform float uCausticsSpeed;
-        //     uniform float uCausticsThickness;
-        //     uniform float uCausticsOffset;
-        //     uniform float uHeightMin;
-        //     uniform float uHeightMax;
-            
-        //     varying vec3 vWorldPosition;
-            
-        //     // Caustics function from your shader
-        //     float caustics(vec2 uv, float time) {
-        //         vec2 p = uv * uCausticsScale;
-        //         float t = time * uCausticsSpeed;
-                
-        //         float a = 0.0;
-        //         for (int i = 0; i < 3; i++) {
-        //             vec2 q = p + vec2(sin(t * 0.7), cos(t * 0.5)) * 0.1;
-        //             a += sin(length(q) * 3.0 - t * 2.0) * 0.5 + 0.5;
-        //             p *= 1.3;
-        //             t *= 1.1;
-        //         }
-                
-        //         return smoothstep(uCausticsOffset, uCausticsOffset + uCausticsThickness, a / 3.0);
-        //     }`
-        // ).replace(
-        //     '#include <output_fragment>',
-        //     `#include <output_fragment>
-            
-        //     // Apply caustics based on world position height
-        //     float heightFactor = smoothstep(uHeightMin, uHeightMax, vWorldPosition.y);
-        //     float causticsPattern = caustics(vUv, uTime);
-        //     vec3 causticsEffect = uCausticsColor * causticsPattern * uCausticsIntensity * heightFactor;
-            
-        //     gl_FragColor.rgb += causticsEffect;`
+        //     ${causticsFragmentShader}`
         // );
+
+        
     };
     
-    groundCausticsStandard.castShadow = true;
-    groundCausticsStandard.receiveShadow = true;
+    
 
    const groundMesh = new THREE.Mesh(groundGeo, groundCausticsStandard);
-   
+   groundMesh.castShadow = true;
+    groundMesh.receiveShadow = true;
+
     scene.add(groundMesh);
     groundMesh.rotation.x = -Math.PI / 2;
     groundMesh.position.y = 0;

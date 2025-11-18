@@ -1,4 +1,3 @@
-
 import * as THREE from 'three';
 
 import { ImprovedNoise } from 'three/examples/jsm/math/ImprovedNoise.js';
@@ -9,6 +8,7 @@ let params = {
 };
 
 let lighteningLight;
+let directionalLight; // make directionalLight accessible outside setup
 
 export function setup(scene,gui) {
 
@@ -46,8 +46,21 @@ export function setup(scene,gui) {
     const ambientLight = new THREE.AmbientLight( 0xe7e7e7, 1 );
     scene.add( ambientLight );
 
-    const directionalLight = new THREE.DirectionalLight( 0xe0e0e0, 4 );
+    directionalLight = new THREE.DirectionalLight( 0xe0e0e0, 4 );
     directionalLight.position.set( - 1, 1, -0.16 );
+    directionalLight.castShadow = true;
+    directionalLight.shadow.mapSize.width = 512;
+    directionalLight.shadow.mapSize.height = 512;
+    
+    // Set shadow camera bounds
+    const shadow_camera_length = 50;
+    directionalLight.shadow.camera.near = 10;
+    directionalLight.shadow.camera.far = 50;
+    directionalLight.shadow.camera.left = -shadow_camera_length;
+    directionalLight.shadow.camera.right = shadow_camera_length;
+    directionalLight.shadow.camera.top = shadow_camera_length;
+    directionalLight.shadow.camera.bottom = -shadow_camera_length;
+
     scene.add( directionalLight );
 
     //lightening
@@ -94,17 +107,29 @@ function setupGUI(gui, ambientLight, directionalLight){
 
 }
 
-export function update(delta) {
+export function update(delta, boat) {
 
     var time = performance.now()*0.0005;
 
     let intensity = THREE.MathUtils.clamp(new ImprovedNoise().noise(time,1,1)+0.5, 0.7, 1) - 0.7; //from 0 to 0.1
     intensity=intensity*20;
 
-    //console.log (intensity, intensity > 0 ? intensity + 2 : 0);
-
     lighteningLight.intensity = intensity > 0 ? intensity + 2 : 0;
 
+    // Update directional light shadow camera to follow the boat
+    if (boat && directionalLight && directionalLight.shadow && directionalLight.shadow.camera) {
+        if(boat !== undefined && boat.boat !== undefined && boat.boat.body !== undefined) {
+        updateDirectionalLightShadowCamera( boat.boat.body.position);
+        }
+    }
+}
+
+// Update the shadow camera position to follow the boat
+function updateDirectionalLightShadowCamera(boatPosition) {
+    // Center the shadow camera on the boat's position
+    const cam = directionalLight.shadow.camera;
+    cam.position.copy(boatPosition);
+    cam.updateProjectionMatrix();
 }
 
 // Define the flicker animation

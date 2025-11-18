@@ -6,7 +6,7 @@ import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 
 const objects = [];
 
-export function setup(scene, position = new THREE.Vector3(-90, 4.5, 80), rotate = -Math.PI / 6) {
+export function setup(scene, position = new THREE.Vector3(-90, 4.5, 80), rotate = -Math.PI / 1) {
 
     const manager = new THREE.LoadingManager();
     manager.addHandler(/\.dds$/i, new DDSLoader());

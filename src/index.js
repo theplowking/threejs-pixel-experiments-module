@@ -117,6 +117,7 @@ function animate() {
     water2.update(delta);
     boat.update(delta);
     // pixelPass.update(renderer, camera.camera);
+    lights.update(delta, boat.boat);
 
     composer.render();
     //renderer.render(scene, camera.camera); 
