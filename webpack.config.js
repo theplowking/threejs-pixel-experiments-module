@@ -20,6 +20,9 @@ const config = {
     path: path.resolve(__dirname, 'dist'),
     filename: 'script.js',
   },
+  devServer: {
+    allowedHosts: 'all',
+  },
   plugins: [
     new CopyPlugin({
       patterns: [

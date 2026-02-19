@@ -49,17 +49,17 @@ export function setup(scene,gui) {
     directionalLight = new THREE.DirectionalLight( 0xe0e0e0, 4 );
     directionalLight.position.set( - 1, 1, -0.16 );
     directionalLight.castShadow = true;
-    directionalLight.shadow.mapSize.width = 512;
-    directionalLight.shadow.mapSize.height = 512;
+    // directionalLight.shadow.mapSize.width = 512;
+    // directionalLight.shadow.mapSize.height = 512;
     
-    // Set shadow camera bounds
-    const shadow_camera_length = 50;
-    directionalLight.shadow.camera.near = 10;
-    directionalLight.shadow.camera.far = 50;
-    directionalLight.shadow.camera.left = -shadow_camera_length;
-    directionalLight.shadow.camera.right = shadow_camera_length;
-    directionalLight.shadow.camera.top = shadow_camera_length;
-    directionalLight.shadow.camera.bottom = -shadow_camera_length;
+    // // Set shadow camera bounds
+    // const shadow_camera_length = 50;
+    // directionalLight.shadow.camera.near = 10;
+    // directionalLight.shadow.camera.far = 50;
+    // directionalLight.shadow.camera.left = -shadow_camera_length;
+    // directionalLight.shadow.camera.right = shadow_camera_length;
+    // directionalLight.shadow.camera.top = shadow_camera_length;
+    // directionalLight.shadow.camera.bottom = -shadow_camera_length;
 
     scene.add( directionalLight );
 

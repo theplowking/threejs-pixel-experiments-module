@@ -1,5 +1,3 @@
-
-
 import * as THREE from 'three';
 
 import * as CANNON from 'cannon-es';
@@ -76,7 +74,7 @@ lights.setup(scene, gui);
  //ground.setup(scene);
  skybox(scene);
  //modelGLTF(scene);
-water2.setup(scene, gui, 500, 5);
+water2.setup(scene, gui, 500, 5, camera.camera);
 //water_noise_shader.setup(scene, gui, 1000, 5);
 terrain.setup(scene);
 town.setup(scene);
@@ -103,7 +101,7 @@ function animate() {
     world.step(1/60, delta, 3);
     
     //cannonDebugRenderer.update(); // Update the CannonDebugger meshes
-    
+        
     camera.update(boat)    
     //cube.update(delta); 
     // fire.update(delta);

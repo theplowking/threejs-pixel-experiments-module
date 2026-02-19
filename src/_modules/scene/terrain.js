@@ -5,7 +5,8 @@ import { SimplifyModifier } from 'three/addons/modifiers/SimplifyModifier.js';
 import { CausticsShader } from '../shaders/water/caustics_shader_flat_oncompile.js';
 
 
-const terrainTexture = new THREE.TextureLoader().load('../textures/tex_island.png');
+//const terrainTexture = new THREE.TextureLoader().load('../textures/tex_island.png');
+const terrainTexture = new THREE.TextureLoader().load('../textures/map2.jpg');
 
 let groundCaustics, groundMat, groundCausticsStandard;
 
@@ -45,7 +46,8 @@ export function setup(scene) {
 
     // Load the heightmap texture and set vertex heights after loading
     const loader = new THREE.TextureLoader();
-    loader.load('textures/heightmap_island.png', (disMap) => {
+    //loader.load('textures/heightmap_island.png', (disMap) => {
+    loader.load('textures/heightmap2.png', (disMap) => {
         // Create a canvas to extract pixel data
         const img = disMap.image;
         const canvas = document.createElement('canvas');
@@ -70,7 +72,8 @@ export function setup(scene) {
             // Scale pixel to height (0-255 to e.g. 0-100)
             const scale = 100;
             const height = (pixel / 255) * scale;
-            verts.setZ(i, height - 60);
+            //verts.setZ(i, height - 60);
+            verts.setZ(i, height + 2.2);
         }
         verts.needsUpdate = true;
         groundGeo.computeVertexNormals();
