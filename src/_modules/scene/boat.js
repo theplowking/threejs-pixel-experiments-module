@@ -9,7 +9,7 @@ let world = null;
 
 // Wind parameters (exposed to GUI)
 export const wind = {
-    speed: 0, // wind speed (force magnitude)
+    speed: 15, // wind speed (force magnitude)
     direction: 0 // wind direction in degrees (0 = +Z, 90 = +X)
 };
 

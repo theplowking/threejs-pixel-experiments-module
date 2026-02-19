@@ -42,6 +42,7 @@ export function setupGUI(gui) {
             renderPixelatedPass.setPixelSize( params.pixelSize );
 
         } );
+    renderPixelatedPass.normalEdgeStrength = 0;
     pixelFolder.add( renderPixelatedPass, 'normalEdgeStrength' ).min( 0 ).max( 2 ).step( .05 );
     pixelFolder.add( renderPixelatedPass, 'depthEdgeStrength' ).min( 0 ).max( 1 ).step( .05 );
 

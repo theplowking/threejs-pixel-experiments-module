@@ -118,40 +118,14 @@ export function setup(scene) {
         shader.uniforms.uCausticsSpeed = { value: 1.0 };
         shader.uniforms.uCausticsThickness = { value: 0.5 };
         shader.uniforms.uCausticsOffset = { value: 0.75 };
-        shader.uniforms.uHeightMin = { value: -10 };
-        shader.uniforms.uHeightMax = { value: 5 };
+        shader.uniforms.uHeightMin = { value: 1 };
+        shader.uniforms.uHeightMax = { value: 4.8 };
 
         // Store shader reference for updates
         groundCausticsStandard.userData.shader = shader;
 
-        // Extract caustics calculation from original shader's main function
-        const causticsFragmentShader = CausticsShader.fragmentShader;
-
-        console.log(shader.vertexShader);
-        console.log(shader.fragmentShader);
-
         shader.vertexShader = CausticsShader.vertexShader;
         shader.fragmentShader = CausticsShader.fragmentShader;
-        
-        // // Inject vertex shader modifications
-        // shader.vertexShader = shader.vertexShader.replace(
-        //     '#include <common>',
-        //     `#include <common>
-        //     varying vec3 vWorldPosition;`
-        // ).replace(
-        //     '#include <worldpos_vertex>',
-        //     `#include <worldpos_vertex>
-        //     vWorldPosition = (modelMatrix * vec4(transformed, 1.0)).xyz;`
-        // );
-
-        // // Inject fragment shader modifications
-        // shader.fragmentShader = shader.fragmentShader.replace(
-        //     '#include <common>',
-        //     `#include <common>
-        //     ${causticsFragmentShader}`
-        // );
-
-        
     };
     
     

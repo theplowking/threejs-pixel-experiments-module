@@ -28,16 +28,13 @@ const CausticsShader = {
         #define STANDARD
         varying vec3 vViewPosition;
 
-        /* --- custom uniforms/ varyings --- */
-        uniform sampler2D uTexture;        // your texture sampler
+        /* --- custom varyings --- */
         varying vec3 vWorldPosCustom;      // always-available world position (xyz)
-        varying vec3 vTriangleColor;       // per-vertex color sampled from uTexture
 
         varying vec2 vUv;
-        varying vec3 vWorldPosition;
 
-        #ifdef USE_TRANSMISSION
-            varying vec3 vWorldPosition;   // Three.js transmission-only varying
+        #ifndef USE_TRANSMISSION
+            varying vec3 vWorldPosition;
         #endif
 
         #include <common>
@@ -86,9 +83,6 @@ const CausticsShader = {
             #include <worldpos_vertex>
 
             // --- custom passes ---
-            // 1) sample per-vertex color from your texture using built-in vUv
-            vTriangleColor = texture2D( uTexture, vUv ).rgb;
-
             vUv = uv;
                         
             // If possible, pass world y position for masking
@@ -167,9 +161,8 @@ const CausticsShader = {
 
         varying vec3 vViewPosition;
 
-        // --- custom uniforms (from your shader) ---
+        // --- custom uniforms (caustics) ---
         uniform float uTime;
-        uniform sampler2D uTexture;
         uniform vec3  uCausticsColor;
         uniform float uCausticsIntensity;
         uniform float uCausticsOffset;
@@ -182,13 +175,8 @@ const CausticsShader = {
         varying vec2 vUv;
         varying vec3 vWorldPosition;
 
-        // Provided by vertex merge:
+        // Provided by vertex shader:
         varying vec3 vWorldPosCustom;  // always-available world position
-        varying vec3 vTriangleColor;   // per-vertex color sampled from uTexture
-
-        // (kept for completeness in case you bind them; not used directly here)
-        uniform mat4 inverseViewProjMatrix;
-        uniform vec2 viewportSize;
 
         #include <common>
         #include <packing>
@@ -308,11 +296,8 @@ const CausticsShader = {
             float heightMask = smoothstep(uHeightMin, uHeightMax, vWorldPosCustom.y) * (1.0 - step(uHeightMax, vWorldPosCustom.y));
             diffuseColor.a *= heightMask;
 
-            // 2) Use per-vertex sampled color as the base albedo
-            //    (If you prefer to multiply instead, replace the assignment with *=)
-            diffuseColor.rgb = vTriangleColor;
-
-            // 3) Caustics pattern added as *emissive* contribution
+            // 2) Caustics pattern added as *emissive* contribution
+            //    (texture is handled by #include <map_fragment> above)
             float c0 = uCausticsIntensity * (uCausticsOffset - abs(snoise(vec3(vUv.xy * uCausticsScale,  uTime * uCausticsSpeed))));
             float c1 = uCausticsIntensity * (uCausticsOffset - abs(snoise(vec3(vUv.yx * uCausticsScale, -uTime * uCausticsSpeed))));
             float caustics = c0 + c1;
