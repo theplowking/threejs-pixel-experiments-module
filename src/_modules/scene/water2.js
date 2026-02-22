@@ -6,17 +6,20 @@ import { Water } from 'three/addons/objects/Water2.js';
 import { WaterShader } from '../shaders/water/water_combo.js';
 
 let water;
+let planeScale = 1; // stored from setup() for UV offset calculation
 
 let params = {
     color: '#ffffff',
-    scale: 10,
-    flowX: 1,
-    flowY: 1
+    scale: 3,
+    flowX: 0,
+    flowY: 0,
+    waveAmplitude: 0.5
 };
 
 export function setup(scene, gui, scale, pos) {
 
-    const waterGeometry = new THREE.PlaneGeometry( scale, scale, 1024, 1024 );
+    planeScale = scale;
+    const waterGeometry = new THREE.PlaneGeometry( scale, scale, 256, 256 );
 
     water = new Water( waterGeometry, {
         color: params.color,
@@ -62,13 +65,37 @@ export function setup(scene, gui, scale, pos) {
         water.material.uniforms[ 'flowDirection' ].value.normalize();
 
     } );
+    waterFolder.add( params, 'waveAmplitude', 0, 5 ).step( 0.01 ).name('Wave Amplitude').onChange( function ( value ) {
+
+        water.material.uniforms[ 'uWavesAmplitude' ].value = value;
+
+    } );
 
     waterFolder.close();
 
 }
 
 export function update(delta) {
-    water.material.uniforms[ 'uTime' ].value += delta;
+    //water.material.uniforms[ 'uTime' ].value += delta;
+}
+
+/**
+ * Move the water plane to follow a target (e.g. the boat) and offset the noise
+ * so waves appear to scroll past rather than the boat moving through static waves.
+ * Call this each frame with the boat's world position.
+ */
+export function followTarget(targetX, targetZ) {
+    // Move the water plane to stay centred on the target.
+    water.position.x = targetX;
+    water.position.z = targetZ;
+
+    // Offset the normal-map UVs so the surface detail stays fixed in world space.
+    // UVs go 0→1 across planeScale world units, so divide position by planeScale.
+    // The plane is rotated -90° around X, so local Y = -world Z → flip Z sign.
+    water.material.uniforms['uNoiseOffset'].value.set(
+        targetX / planeScale,
+        -targetZ / planeScale
+    );
 }
 
 export function getWaterHeightAt(x, z) {
@@ -81,9 +108,10 @@ export function getWaterHeightAt(x, z) {
     const speed = uniforms.uWavesSpeed.value;
     const iterations = uniforms.uWavesIterations.value;
 
-    // Convert world coordinates to local space
-    const localX = x - water.position.x;
-    const localZ = z - water.position.z;
+    // Use world-space coordinates directly — matches the shader which
+    // uses modelPosition (world-space) without any offset.
+    const noiseX = x;
+    const noiseZ = z;
 
     let elevation = 0.0;
     let currentAmplitude = 1.0;
@@ -97,7 +125,7 @@ export function getWaterHeightAt(x, z) {
     //     localX * currentFrequency + time * speed,
     //     localZ * currentFrequency + time * speed
     //   );
-      const noiseValue = snoise([localX * currentFrequency + time * speed, localZ * currentFrequency + time * speed]);
+      const noiseValue = snoise([noiseX * currentFrequency + time * speed, noiseZ * currentFrequency + time * speed]);
       elevation += currentAmplitude * noiseValue;
       currentAmplitude *= persistence;
       currentFrequency *= lacunarity;

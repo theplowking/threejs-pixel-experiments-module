@@ -76,7 +76,7 @@ lights.setup(scene, gui);
  skybox(scene);
  //sky_shader.setup(scene, renderer, gui);
  //modelGLTF(scene);
-water2.setup(scene, gui, 500, 5, camera.camera);
+water2.setup(scene, gui, 150, 5, camera.camera);
 //water_noise_shader.setup(scene, gui, 1000, 5);
 terrain.setup(scene);
 town.setup(scene);
@@ -116,6 +116,12 @@ function animate() {
     terrain.update(delta);
     water2.update(delta);
     boat.update(delta);
+
+    // Keep water centred on the boat and offset the noise so waves scroll past
+    if (boat.boat && boat.boat.body) {
+        water2.followTarget(boat.boat.body.position.x, boat.boat.body.position.z);
+    }
+
     //sky_shader.update(delta);
     // pixelPass.update(renderer, camera.camera);
     lights.update(delta, boat.boat);

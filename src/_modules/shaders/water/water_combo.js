@@ -65,7 +65,8 @@ const WaterShader = {
         'uTroughThreshold': { value: -0.01 },
         'uTroughTransition': { value: 0.15 },
         'uFresnelScale': { value: 0.8 },
-        'uFresnelPower': { value: 0.5 }
+        'uFresnelPower': { value: 0.5 },
+        'uNoiseOffset': { value: new THREE.Vector2(0, 0) }
 
 	},
 
@@ -81,6 +82,7 @@ const WaterShader = {
         uniform float uWavesPersistence;
         uniform float uWavesLacunarity;
         uniform float uWavesIterations;
+        uniform vec2 uNoiseOffset;
 
         // Uniform for projective texturing (needed for vCoord)
 uniform mat4 textureMatrix;
@@ -132,6 +134,8 @@ uniform mat4 textureMatrix;
         }
 
         // Helper function to calculate elevation at any point
+        // Uses world-space position directly — the moving water plane
+        // samples different noise regions, making waves scroll past naturally.
         float getElevation(float x, float z) {
         vec2 pos = vec2(x, z);
 
@@ -202,6 +206,7 @@ uniform mat4 textureMatrix;
 		uniform vec3 color;
 		uniform float reflectivity;
 		uniform vec4 config;
+		uniform vec2 uNoiseOffset;
 
 		varying vec4 vCoord;
 		varying vec2 vUv;
@@ -228,8 +233,10 @@ uniform mat4 textureMatrix;
 			flow.x *= - 1.0;
 
 			// sample normal maps (distort uvs with flowdata)
-			vec4 normalColor0 = texture2D( tNormalMap0, ( vUv * scale ) + flow * flowMapOffset0 );
-			vec4 normalColor1 = texture2D( tNormalMap1, ( vUv * scale ) + flow * flowMapOffset1 );
+			// Offset UVs by uNoiseOffset so the pattern stays fixed in world space
+			vec2 offsetUv = vUv + uNoiseOffset;
+			vec4 normalColor0 = texture2D( tNormalMap0, ( offsetUv * scale ) + flow * flowMapOffset0 );
+			vec4 normalColor1 = texture2D( tNormalMap1, ( offsetUv * scale ) + flow * flowMapOffset1 );
 
 			// linear interpolate to get the final normal color
 			float flowLerp = abs( halfCycle - flowMapOffset0 ) / halfCycle;
