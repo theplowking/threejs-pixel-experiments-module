@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { USDZLoader } from 'three/examples/jsm/loaders/USDZLoader.js';
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { USDZLoader } from 'three/addons/loaders/USDZLoader.js';
 
 // Internal boat state
 export let boat, sail, jib;

@@ -1,8 +1,27 @@
 
 import * as THREE from 'three';
 
-import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { PaletteShader } from '../shaders/palette_shader.js';
+
+function linearToSRGB(c) {
+    return c < 0.0031308 ? c * 12.92 : 1.055 * Math.pow(c, 1.0 / 2.4) - 0.055;
+}
+function sRGBToLinear(c) {
+    return c < 0.04045 ? c * 0.0773993808 : Math.pow(c * 0.9478672986 + 0.0521327014, 2.4);
+}
+function colorLinearToSRGB(color) {
+    color.r = linearToSRGB(color.r);
+    color.g = linearToSRGB(color.g);
+    color.b = linearToSRGB(color.b);
+    return color;
+}
+function colorSRGBToLinear(color) {
+    color.r = sRGBToLinear(color.r);
+    color.g = sRGBToLinear(color.g);
+    color.b = sRGBToLinear(color.b);
+    return color;
+}
 // import { C64Shader } from '../shaders/c64_shader.js';
 // import { DitheShader } from '../shaders/dither_shader.js';
 
@@ -20,7 +39,7 @@ export default function palettePass(composer, gui, enabled) {
 
     let paletteUniform = [];
     paletteSource.forEach(function (colPal, index) {
-        paletteUniform.push(new THREE.Color( colPal).convertLinearToSRGB());
+        paletteUniform.push(colorLinearToSRGB(new THREE.Color( colPal)));
         });                                           
     
     const PaletteShaderPass = new ShaderPass( PaletteShader );
@@ -45,7 +64,7 @@ export default function palettePass(composer, gui, enabled) {
 
     var obj = { debug:function(){ 
         let t=[];
-        paletteUniform.forEach((e) => {t.push("0x" + e.clone().convertSRGBToLinear().getHexString());}); //convertLinearToSRGB()
+        paletteUniform.forEach((e) => {t.push("0x" + colorSRGBToLinear(e.clone()).getHexString());}); //convertLinearToSRGB()
         console.log(t.slice(0,paletteSource.length));
      }};
 

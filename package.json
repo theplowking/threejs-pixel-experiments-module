@@ -24,7 +24,7 @@
     "cannon-es-debugger": "^1.0.0",
     "cannon-utils": "^0.1.4",
     "simplex-noise": "^4.0.3",
-    "three": "^0.176.0",
+    "three": "^0.183.0",
     "three-particle-fire": "^0.1.0"
   }
 }

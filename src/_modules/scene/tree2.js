@@ -3,6 +3,16 @@ import * as THREE from 'three';
 
 const Tree = require('./proctree.js');
 
+function createFloatAttribute(array, itemSize) {
+    return new THREE.BufferAttribute(new Float32Array(array), itemSize);
+}
+function createIntAttribute(array, itemSize) {
+    return new THREE.BufferAttribute(new Uint16Array(array), itemSize);
+}
+function normalizeAttribute(attribute) {
+    return attribute.normalize();
+}
+
 export default function tree2(scene) {
 
     const textureLoader = new THREE.TextureLoader();
@@ -24,15 +34,15 @@ export default function tree2(scene) {
     const tree = new Tree(config);
 
     const treeGeometry = new THREE.BufferGeometry();
-    treeGeometry.addAttribute('position', createFloatAttribute(tree.verts, 3));
-    treeGeometry.addAttribute('normal', normalizeAttribute(createFloatAttribute(tree.normals, 3)));
-    treeGeometry.addAttribute('uv', createFloatAttribute(tree.UV, 2));
+    treeGeometry.setAttribute('position', createFloatAttribute(tree.verts, 3));
+    treeGeometry.setAttribute('normal', normalizeAttribute(createFloatAttribute(tree.normals, 3)));
+    treeGeometry.setAttribute('uv', createFloatAttribute(tree.UV, 2));
     treeGeometry.setIndex(createIntAttribute(tree.faces, 1));
 
     const twigGeometry = new THREE.BufferGeometry();
-    twigGeometry.addAttribute('position', createFloatAttribute(tree.vertsTwig, 3));
-    twigGeometry.addAttribute('normal', normalizeAttribute(createFloatAttribute(tree.normalsTwig, 3)));
-    twigGeometry.addAttribute('uv', createFloatAttribute(tree.uvsTwig, 2));
+    twigGeometry.setAttribute('position', createFloatAttribute(tree.vertsTwig, 3));
+    twigGeometry.setAttribute('normal', normalizeAttribute(createFloatAttribute(tree.normalsTwig, 3)));
+    twigGeometry.setAttribute('uv', createFloatAttribute(tree.uvsTwig, 2));
     twigGeometry.setIndex(createIntAttribute(tree.facesTwig, 1));
 
     const treeGroup = new THREE.Group();

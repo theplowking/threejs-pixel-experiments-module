@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 
-import { DDSLoader } from 'three/examples/jsm/loaders/DDSLoader.js';
-import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader.js';
-import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
+import { DDSLoader } from 'three/addons/loaders/DDSLoader.js';
+import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
+import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 
 const objects = [];
 

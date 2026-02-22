@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { createNoise3D } from 'simplex-noise';
-import { Water } from 'three/examples/jsm/objects/Water2.js';
+import { Water } from 'three/addons/objects/Water2.js';
 
 // Initialize simplex noise function
 const noise3D = createNoise3D();

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 export default function modelGTLF(scene, forceFlat = false) {
 

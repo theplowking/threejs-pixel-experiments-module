@@ -3,8 +3,8 @@ import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
 import CannonDebugger from 'cannon-es-debugger'
 
-import { Reflector } from 'three/examples/jsm/objects/Reflector.js'
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { Reflector } from 'three/addons/objects/Reflector.js'
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import * as lights from './_modules/setup/lights.js';
@@ -14,11 +14,12 @@ import * as rendererMod from './_modules/setup/renderer.js';
 import * as pixelPass from './_modules/passes/pixelPass.js';
 import palettePass from './_modules/passes/palettePass.js';
 
-import Stats from 'three/examples/jsm/libs/stats.module.js';
-import { GUI } from 'three/examples/jsm/libs/lil-gui.module.min.js';
+import Stats from 'three/addons/libs/stats.module.js';
+import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 
 import * as ground from './_modules/scene/ground.js';
 import skybox from './_modules/scene/skybox.js';
+//import * as sky_shader from './_modules/scene/sky_shader.js';
 import * as water2 from './_modules/scene/water2.js';
 import * as boat from './_modules/scene/boat.js';
 
@@ -73,6 +74,7 @@ lights.setup(scene, gui);
 //BACKGROUND
  //ground.setup(scene);
  skybox(scene);
+ //sky_shader.setup(scene, renderer, gui);
  //modelGLTF(scene);
 water2.setup(scene, gui, 500, 5, camera.camera);
 //water_noise_shader.setup(scene, gui, 1000, 5);
@@ -114,6 +116,7 @@ function animate() {
     terrain.update(delta);
     water2.update(delta);
     boat.update(delta);
+    //sky_shader.update(delta);
     // pixelPass.update(renderer, camera.camera);
     lights.update(delta, boat.boat);
 
