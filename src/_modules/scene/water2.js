@@ -11,8 +11,8 @@ let planeScale = 1; // stored from setup() for UV offset calculation
 let params = {
     color: '#ffffff',
     scale: 3,
-    flowX: 0,
-    flowY: 0,
+    flowX: 0.5,
+    flowY: 0.5,
     waveAmplitude: 0.5
 };
 
@@ -76,7 +76,7 @@ export function setup(scene, gui, scale, pos) {
 }
 
 export function update(delta) {
-    //water.material.uniforms[ 'uTime' ].value += delta;
+    water.material.uniforms[ 'uTime' ].value += delta;
 }
 
 /**

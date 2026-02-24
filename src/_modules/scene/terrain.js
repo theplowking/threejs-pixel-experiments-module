@@ -97,8 +97,8 @@ export function setup(scene) {
               uCausticsSpeed: { value: 1.0 },
               uCausticsThickness: { value: 0.4 },
               uCausticsOffset: { value: 0.75 },
-              uHeightMin: { value: 1 },
-              uHeightMax: { value: 5 }
+              uHeightMin: { value: 4 },
+              uHeightMax: { value: 4.8 }
             }
           });
 
